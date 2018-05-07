@@ -1,4 +1,5 @@
 .Rproj.user
 .Rhistory
 .RData
-data/*.csv
+inst/examples/*.csv
+inst/examples/*.Rdata

@@ -27,11 +27,15 @@ rm(list=ls())
 library(FishLife)
 library(mvtnorm)
 library(dplyr)
+devtools::install('..')
+library(sraplus)
 
 ###################
 ## directories
 ###################
 main_dir <- file.path("C:\\merrill\\status_priors\\SSRA")
+system.file('examples', 'simple', package='adnuts')
+
 setwd(main_dir)
 
 data_dir <- file.path(main_dir, "data")
