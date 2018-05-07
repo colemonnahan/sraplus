@@ -27,44 +27,32 @@ rm(list=ls())
 library(FishLife)
 library(mvtnorm)
 library(dplyr)
-devtools::install('..')
+devtools::load_all('C:/Users/Cole/sraplus')
 library(sraplus)
 
 ###################
 ## directories
 ###################
-main_dir <- file.path("C:\\merrill\\status_priors\\SSRA")
-system.file('examples', 'simple', package='adnuts')
-
+main_dir <- system.file(package='sraplus')
 setwd(main_dir)
-
-data_dir <- file.path(main_dir, "data")
-R_dir <- file.path(main_dir, "R")
-
-load("Return.Rdata")
-
-###########################
-## read global R functions
-###########################
-
-R_files <- list.files(R_dir)
-ignore <- sapply(1:length(R_files), function(x) source(file.path(R_dir, R_files[x])))
+data_dir <- file.path(main_dir, "examples")
 
 ###########################
 ## data
 ###########################
+load(file.path(data_dir, "Return.RData"))
 datafile <- file.path(data_dir, "Mexico FAO Catch Data.csv")
 priorfile <- file.path(data_dir, "DeplPrior_wTaxa.csv")
 
 ## catch data
 C <- ReadCatchData(File=datafile)
-CatchData=C$CatchData
-StockInfo=C$StockInfo
-CStock=paste(StockInfo$Species..ASFIS.species.,StockInfo$Fishing.area..FAO.major.fishing.area.)
+CatchData <- C$CatchData
+StockInfo <- C$StockInfo
+CStock <- paste(StockInfo$Species..ASFIS.species.,StockInfo$Fishing.area..FAO.major.fishing.area.)
 
 ## prior info
-Priors=ReadPrior(File=priorfile)
-StockList=paste(Priors$Species..ASFIS.species.,Priors$Fishing.area..FAO.major.fishing.area.)
+Priors <- ReadPrior(File=priorfile)
+StockList <- paste(Priors$Species..ASFIS.species.,Priors$Fishing.area..FAO.major.fishing.area.)
 
 ## indices
 AllYears=seq(1950,2015)
@@ -81,7 +69,7 @@ jStock=which(CStock==StockList[iStock])
 ###########################
 
 ## settings
-nrep=100000
+nrep=1000
 Stock=StockList[iStock]
 
 ## initial depletion prior
@@ -151,7 +139,7 @@ draws <- draws_mvn %>%
 
 
 ## pairs plot of random draws
-# pairs(draws)
+## pairs(draws)
 
 ## data inputs
 Years=AllYears[which(is.na(Catch)==FALSE)]
