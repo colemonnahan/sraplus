@@ -1,12 +1,13 @@
 
 #' Run the SIR algorithm for a draws and stock (temporary)
 #' @param draws data.frame of prior draws for SIR
-#' @return A list containing depletion and SSB for posterior draws, and a
-#'   vector of Keepers
+#' @return A list containing depletion, SSB, and harvest rate (U) for
+#'   posterior draws, and a vector of Keepers
 run.SIR <- function(draws, pct.keep=10){
   ## store results
   Bstore <- array(dim=c(NY,nrep))
   Dstore <- array(dim=c(NY,nrep))
+  Ustore <- array(dim=c(NY,nrep))
   LikeStore <- array(dim=nrep)
   B <- array(dim=(NY+1))  #stock biomass
   ## #########################
@@ -31,12 +32,14 @@ run.SIR <- function(draws, pct.keep=10){
     ages <- 1:AgeMax
     Length <- Linf*(1-exp(-vbk*ages))
     Weight <- lwa * Length ^ lwb
-    pop <- AgeModel(Catch, AgeMat, Steep,NatMort, AgeMax, Carry, Weight,InitialDeplete,Sigma)
+    out <- AgeModel(Catch, AgeMat, Steep,NatMort, AgeMax, Carry, Weight,InitialDeplete,Sigma)
+    pop <- out$pop
     ## plot(Years,pop,type="l",ylim=c(0,max(pop)))
     Deplete <- pop/Carry
     like <- dnorm(Deplete[NY],mean=FinalDepleteBest,sd=FinalDepleteCV)
     Bstore[,irep] <- pop
     Dstore[,irep] <- Deplete
+    Ustore[,irep] <- out$hr
     LikeStore[irep] <- like
   } #end of loop over replicates
 
@@ -54,5 +57,6 @@ run.SIR <- function(draws, pct.keep=10){
   }
   print(paste("% unique draws=",100*length(unique(Keepers))/Nkeep))
 
-  return(list(depletion=Dstore[, Keepers], ssb=Bstore[,Keepers], Keepers=Keepers))
+  return(list(depletion=Dstore[, Keepers], ssb=Bstore[,Keepers],
+              U=Ustore[,Keepers], Keepers=Keepers))
 }

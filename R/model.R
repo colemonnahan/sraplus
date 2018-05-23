@@ -3,26 +3,26 @@
 #' @export
 AgeModel <- function(Catch,AgeMat, Steep,NatMort, AgeMax, Carry,Weight,InitialDeplete,Sigma) {
   ## process error devations
-  devsvector=rnorm(NYears,mean=0,sd=Sigma)
+  devsvector <- rnorm(NYears,mean=0,sd=Sigma)
   ## maximum age
-  maxage=AgeMax
+  maxage <- AgeMax
   ## natural survival
-  surv = 1-NatMort
+  surv  <-  1-NatMort
   ## 100% selectivity option
-  if(AgeMat==1){vuln=rep(1,maxage)}
+  if(AgeMat==1){vuln <- rep(1,maxage)}
   ## assume knife edge selectivity
-  if (AgeMat>1) {vuln=c(rep(0,AgeMat-1),rep(1,1+maxage-AgeMat))}
+  if (AgeMat>1) {vuln <- c(rep(0,AgeMat-1),rep(1,1+maxage-AgeMat))}
   ## assume logistic maturity
-  mature = 1 / (1 + exp(AgeMat - 1:AgeMax))
+  mature  <-  1 / (1 + exp(AgeMat - 1:AgeMax))
   ## numbers at age
-  num=rep(1,maxage)
+  num <- rep(1,maxage)
   ## per recruit
-  rzero=1  #to get sbpr
+  rzero <- 1  #to get sbpr
   for (a in 1:maxage) {
     ## equilibrium numbers at age
-    if (a==1) num[a] = rzero   else num[a] = num[a-1]*surv
+    if (a==1) num[a]  <-  rzero   else num[a]  <-  num[a-1]*surv
     ## plus group
-    if (a==maxage) num[a] = num[a-1]*(surv/(1-surv))
+    if (a==maxage) num[a]  <-  num[a-1]*(surv/(1-surv))
   }
   ## equilibrium spawning biomass
   bzeroInit=sum(Weight*num*mature)# biomass per recruit
@@ -66,6 +66,6 @@ AgeModel <- function(Catch,AgeMat, Steep,NatMort, AgeMax, Carry,Weight,InitialDe
                                         # print(num[1:10])
     if (y==1) {num[1]=num[1]} else {num[1]= rec[y-1] }  #recruitment
   } #end of loop over time
-  return(pop)
+  return(list(pop=pop, hr=hrstore))
 } #end of function
 

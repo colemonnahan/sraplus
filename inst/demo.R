@@ -71,26 +71,29 @@ FinalDepleteBest <- Priors$DepletePrior[iStock]
 FinalDepleteCV <- Priors$DepleteCV[iStock]
 
 ## settings
-nrep <- 1000
+devtools::load_all('C:/Users/Cole/sraplus')
+nrep <- 10000
 set.seed(2323)
 ## Draw from priors for SIR
 draws <- draw.priors(nrep, iStock)
 ## Run SIR to get posterior samples
 temp <- run.SIR(draws)
-tail(temp$depletion[1,])
-## [1] 0.9965566 1.0480772 1.5582368 0.7907136 1.4609847 1.1304281
 
 ## Quick exploratory plots
-par(mfrow=c(1,2))
+par(mfrow=c(3,1))
 ## Plot depletion trajectories
 plot(Years, Years, ylim=c(0,2),type="n",xlab="Year",
      ylab="Depletion",main=StockList[iStock])
-trash <- apply(temp$depletion, 2, function(i) lines(Years,y=i))
+trash <- apply(temp$depletion, 2, function(i) lines(Years,y=i, col=rgb(0,0,0,.1)))
 abline(h=FinalDepleteBest,col="red",lwd=3)
 ## Same but for biomass
 plot(Years,Years, ylim=c(0,1.1*max(temp$ssb)), type="n",xlab="Year",
      ylab="Vulnerable Biomass",main=StockList[iStock])
-trash <- apply(temp$ssb, 2, function(i) lines(Years,y=i))
+trash <- apply(temp$ssb, 2, function(i) lines(Years,y=i, col=rgb(0,0,0,.1)))
+## Same but for harvest rate (U)
+plot(Years,Years, ylim=c(0,1.1*max(temp$U)), type="n",xlab="Year",
+     ylab="Harvest rate (U)",main=StockList[iStock])
+trash <- apply(temp$U, 2, function(i) lines(Years,y=i, col=rgb(0,0,0,.1)))
 
 ## Pairs plot of parameters priors and posterior
 dev.new()
