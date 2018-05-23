@@ -1,9 +1,12 @@
 
 #' Run the SIR algorithm for a draws and stock (temporary)
 #' @param draws data.frame of prior draws for SIR
+#' @param deplete.mean Final year depletion (not in log space)
+#' @param deplete.cv Final year CV, used as SD
 #' @return A list containing depletion, SSB, and harvest rate (U) for
 #'   posterior draws, and a vector of Keepers
-run.SIR <- function(draws, pct.keep=10){
+run.SIR <- function(draws, deplete.mean=NULL, deplete.cv=NULL, harvest.mean=NULL,
+                    harvest.sd=NULL, pct.keep=10){
   ## store results
   Bstore <- array(dim=c(NY,nrep))
   Dstore <- array(dim=c(NY,nrep))
@@ -36,11 +39,18 @@ run.SIR <- function(draws, pct.keep=10){
     pop <- out$pop
     ## plot(Years,pop,type="l",ylim=c(0,max(pop)))
     Deplete <- pop/Carry
-    like <- dnorm(Deplete[NY],mean=FinalDepleteBest,sd=FinalDepleteCV)
+    ## This is the final year "penalty" on an assumed level of depletion or
+    ## harvest rate (or both).
+    loglike1 <- loglike2 <- 0
+    if(!is.null(deplete.mean) & !is.null(deplete.cv))
+    loglike1 <- dnorm(Deplete[NY],mean=deplete.mean,sd=deplete.cv, log=TRUE)
+    ## If specified, include penalty for harvest rate in final year
+    if(!is.null(harvest.mean) & !is.null(harvest.sd))
+      loglike2 <- dnorm(out$hr[NY],mean=harvest.mean,sd=harvest.sd, log=TRUE)
     Bstore[,irep] <- pop
     Dstore[,irep] <- Deplete
     Ustore[,irep] <- out$hr
-    LikeStore[irep] <- like
+    LikeStore[irep] <- exp(loglike1+loglike2)
   } #end of loop over replicates
 
   ## filter keepers
@@ -58,5 +68,7 @@ run.SIR <- function(draws, pct.keep=10){
   print(paste("% unique draws=",100*length(unique(Keepers))/Nkeep))
 
   return(list(depletion=Dstore[, Keepers], ssb=Bstore[,Keepers],
-              U=Ustore[,Keepers], Keepers=Keepers))
+              U=Ustore[,Keepers], final=list(deplete.mean=deplete.mean,
+              deplete.cv=deplete.cv, harvest.mean=harvest.mean,
+              harvest.sd=harvest.sd), Keepers=Keepers))
 }

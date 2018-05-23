@@ -77,11 +77,15 @@ set.seed(2323)
 ## Draw from priors for SIR
 draws <- draw.priors(nrep, iStock)
 ## Run SIR to get posterior samples
-temp <- run.SIR(draws)
+fit1 <- run.SIR(draws, deplete.mean=FinalDepleteBest, deplete.cv=FinalDepleteCV)
+fit2 <- run.SIR(draws, deplete.mean=FinalDepleteBest, deplete.cv=FinalDepleteCV/10)
+fit3 <- run.SIR(draws, harvest.mean=.5, harvest.sd=.1)
 
 ## Quick exploratory plots
-par(mfrow=c(3,1))
+par(mfcol=c(3,2))
 ## Plot depletion trajectories
+for(i in 1:2){
+  if(i==1) temp=fit1 else temp=fit2
 plot(Years, Years, ylim=c(0,2),type="n",xlab="Year",
      ylab="Depletion",main=StockList[iStock])
 trash <- apply(temp$depletion, 2, function(i) lines(Years,y=i, col=rgb(0,0,0,.1)))
@@ -94,6 +98,7 @@ trash <- apply(temp$ssb, 2, function(i) lines(Years,y=i, col=rgb(0,0,0,.1)))
 plot(Years,Years, ylim=c(0,1.1*max(temp$U)), type="n",xlab="Year",
      ylab="Harvest rate (U)",main=StockList[iStock])
 trash <- apply(temp$U, 2, function(i) lines(Years,y=i, col=rgb(0,0,0,.1)))
+}
 
 ## Pairs plot of parameters priors and posterior
 dev.new()
