@@ -38,21 +38,23 @@ AgeModel <- function(Catch,AgeMat, Steep,NatMort, AgeMax, Carry,Weight,InitialDe
                                         # set initial numbers at age
   num=num*rzero*InitialDeplete
   ##  now loop over time
-  bio=c(1:NYears) ## spawning biomass
-  pop=c(1:NYears) ## vulnerable biomass
-  rec=c(1:NYears) ## recruitment
+  bio=rep(NA, length=NYears) ## spawning biomass
+  pop=rep(NA, length=NYears) ## vulnerable biomass
+  rec=rep(NA, length=NYears) ## recruitment
   hrstore=array(dim=NYears) ## harvest rate
-  eggs = c(1:NYears)  ## spawning biomass
+  eggs = rep(NA, length=NYears)  ## spawning biomass
   tsurv=c(1:maxage) ## total survival
   for (y in 1:NYears) {
     ## vulnerable biomass
     Vpop=sum(num*vuln*Weight)
     ## harvest rate based on catch
-    hr <- min(1.0, Catch[y]/Vpop)
+    hr <- Catch[y]/Vpop
     ## hr=min(.9,Catch[y]/Vpop)
     hrstore[y]=hr
+    if(hr>1) break ## break if caught more than available
     ## vulnerable biomass
     pop[y] = sum(num*vuln*Weight)
+    if(pop[y]<0) break ## break if negative
     ## spawning biomass
     eggs[y] = sum(num*mature*Weight)
     ## process error
@@ -67,6 +69,7 @@ AgeModel <- function(Catch,AgeMat, Steep,NatMort, AgeMax, Carry,Weight,InitialDe
     num[2:(maxage-1)]=num[1:(maxage-2)]*tsurv[1:(maxage-2)]        #update age classes 2 to maxage-1
                                         # print(num[1:10])
     if (y==1) {num[1]=num[1]} else {num[1]= rec[y-1] }  #recruitment
+    if(any(num<0)) break
   } #end of loop over time
   return(list(pop=pop, hr=hrstore))
 } #end of function

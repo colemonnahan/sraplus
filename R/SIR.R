@@ -41,17 +41,23 @@ run.SIR <- function(draws, deplete.mean=NULL, deplete.cv=NULL, harvest.mean=NULL
     ## plot(Years,pop,type="l",ylim=c(0,max(pop)))
     Deplete <- pop/Carry
     ## This is the final year "penalty" on an assumed level of depletion or
-    ## harvest rate (or both).
-    loglike1 <- loglike2 <- 0
-    if(!is.null(deplete.mean) & !is.null(deplete.cv))
-    loglike1 <- dnorm(Deplete[NY],mean=deplete.mean,sd=deplete.cv, log=TRUE)
-    ## If specified, include penalty for harvest rate in final year
-    if(!is.null(harvest.mean) & !is.null(harvest.sd))
-      loglike2 <- dnorm(out$hr[NY],mean=harvest.mean,sd=harvest.sd, log=TRUE)
+    ## harvest rate (or both). If the biomass crashes it will return a
+    ## vector with NA's, so catch those here and assign a zero likelihood
+    if(any(is.na(pop))){
+      like <- 0
+    } else {
+      loglike1 <- loglike2 <- 0
+      if(!is.null(deplete.mean) & !is.null(deplete.cv))
+        loglike1 <- dnorm(Deplete[NY],mean=deplete.mean,sd=deplete.cv, log=TRUE)
+      ## If specified, include penalty for harvest rate in final year
+      if(!is.null(harvest.mean) & !is.null(harvest.sd))
+        loglike2 <- dnorm(out$hr[NY],mean=harvest.mean,sd=harvest.sd, log=TRUE)
+      like <- exp(loglike1+loglike2)
+    }
     Bstore[,irep] <- pop
     Dstore[,irep] <- Deplete
     Ustore[,irep] <- out$hr
-    LikeStore[irep] <- exp(loglike1+loglike2)
+    LikeStore[irep] <- like
   } #end of loop over replicates
 
   ## filter keepers
