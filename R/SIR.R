@@ -24,8 +24,9 @@ run.SIR <- function(draws, deplete.mean=NULL, deplete.cv=NULL, harvest.mean=NULL
     ## life history
     Steep <- draws$h[irep]
     NatMort <- draws$M[irep]
-    AgeMat <- round(draws$tm[irep],0)
-    AgeMax <- ceiling(draws$tmax[irep])
+    ## Sometimes these can round down to 0 so arbitrarily setting a min
+    AgeMat <- max(1,round(draws$tm[irep],0))
+    AgeMax <- max(2, AgeMat,ceiling(draws$tmax[irep]))
     Sigma <- draws$Sigma[irep]
     ## growth
     lwa <- draws$lwa[irep]

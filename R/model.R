@@ -12,6 +12,7 @@ AgeModel <- function(Catch,AgeMat, Steep,NatMort, AgeMax, Carry,Weight,InitialDe
   if(AgeMat==1){vuln <- rep(1,maxage)}
   ## assume knife edge selectivity
   if (AgeMat>1) {vuln <- c(rep(0,AgeMat-1),rep(1,1+maxage-AgeMat))}
+  stopifnot(AgeMat>0)
   ## assume logistic maturity
   mature  <-  1 / (1 + exp(AgeMat - 1:AgeMax))
   ## numbers at age
@@ -47,7 +48,8 @@ AgeModel <- function(Catch,AgeMat, Steep,NatMort, AgeMax, Carry,Weight,InitialDe
     ## vulnerable biomass
     Vpop=sum(num*vuln*Weight)
     ## harvest rate based on catch
-    hr=min(.9,Catch[y]/Vpop)
+    hr <- min(1.0, Catch[y]/Vpop)
+    ## hr=min(.9,Catch[y]/Vpop)
     hrstore[y]=hr
     ## vulnerable biomass
     pop[y] = sum(num*vuln*Weight)
