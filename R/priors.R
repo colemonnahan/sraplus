@@ -6,7 +6,12 @@
 #' @export
 draw.priors <- function(N, iStock){
   ## initial depletion prior
-  InitialPrior=rnorm(nrep,Priors$InitialDepletePrior[iStock],Priors$InitialDepleteCV[iStock])
+  ## InitialPrior=rnorm(nrep,Priors$InitialDepletePrior[iStock],Priors$InitialDepleteCV[iStock])
+  ## Switched to a lognormal prior on intial depletion so that we're not
+  ## generating negative starting values for biomass. Assuming that the
+  ## values given are mean and CV and calculating the SD from that.
+  InitialPrior <- rlnorm(nrep, log(Priors$InitialDepletePrior[iStock]),
+                         sqrt(log(Priors$InitialDepleteCV[iStock]^2+1)))
   ## catch info
   Catch=as.numeric(CatchData[jStock,])
   Cmax=max(Catch,na.rm=TRUE)
