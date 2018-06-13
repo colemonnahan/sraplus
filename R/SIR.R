@@ -6,14 +6,14 @@
 #' @param pct.keep The percentage of "keepers" from the total. Default 10%.
 #' @param harvest.sd, harvest.mean The mean and SD of the terminal year
 #'   penalty on fishing pressure. If either is NULL it is ignored.
-#' @param NY Number of years
-#' @param Catch Vector of catches
+#' @param Catch Vector of catches, one for each year.
 #' @return A list containing depletion, SSB, and harvest rate (U) for
 #'   posterior draws, and a vector of Keepers
-run.SIR <- function(NY, Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
+run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
                     harvest.mean=NULL, harvest.sd=NULL, pct.keep=10){
   ## store results
   nrep <- nrow(draws)
+  NY <- length(Catch)
   Bstore <- array(dim=c(NY,nrep))
   Dstore <- array(dim=c(NY,nrep))
   Ustore <- array(dim=c(NY,nrep))
