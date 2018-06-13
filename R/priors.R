@@ -4,7 +4,6 @@
 #' @param InitialDepletePrior Mean of initial lognormal depletion penalty
 #' @param InitialDepleteCV CV of intial lognormal depletion penalty
 #' @param Kprior Maybe a multiplier on K?
-#' @param iStock Stock number (temporary)
 #' @param Catch Vector of catch
 #' @param Taxon A named vector with elements "Class, Order, Family, Genus,
 #'   Species". Either provide a name or "" to specify predictive.

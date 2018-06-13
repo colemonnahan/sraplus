@@ -19,8 +19,6 @@ draw.priors(N, InitialDepletePrior, InitialDepleteCV, Kprior, Catch, Taxon)
 
 \item{Taxon}{A named vector with elements "Class, Order, Family, Genus,
 Species". Either provide a name or "" to specify predictive.}
-
-\item{iStock}{Stock number (temporary)}
 }
 \value{
 A data.frame that contains N random draws from all priors
