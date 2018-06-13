@@ -3,11 +3,17 @@
 #' @param draws data.frame of prior draws for SIR
 #' @param deplete.mean Final year depletion (not in log space)
 #' @param deplete.cv Final year CV, used as SD
+#' @param pct.keep The percentage of "keepers" from the total. Default 10%.
+#' @param harvest.sd, harvest.mean The mean and SD of the terminal year
+#'   penalty on fishing pressure. If either is NULL it is ignored.
+#' @param NY Number of years
+#' @param Catch Vector of catches
 #' @return A list containing depletion, SSB, and harvest rate (U) for
 #'   posterior draws, and a vector of Keepers
-run.SIR <- function(draws, deplete.mean=NULL, deplete.cv=NULL, harvest.mean=NULL,
-                    harvest.sd=NULL, pct.keep=10){
+run.SIR <- function(NY, Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
+                    harvest.mean=NULL, harvest.sd=NULL, pct.keep=10){
   ## store results
+  nrep <- nrow(draws)
   Bstore <- array(dim=c(NY,nrep))
   Dstore <- array(dim=c(NY,nrep))
   Ustore <- array(dim=c(NY,nrep))
@@ -16,7 +22,6 @@ run.SIR <- function(draws, deplete.mean=NULL, deplete.cv=NULL, harvest.mean=NULL
   ## #########################
   ## run iterations
   ## #########################
-  nrep <- nrow(draws)
   for (irep in 1:nrep){   ##loop over replicates
     ## set priors
     InitialDeplete <- draws$InitialPrior[irep]
