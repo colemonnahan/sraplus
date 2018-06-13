@@ -77,7 +77,7 @@ InitialDepletePrior <- Priors$InitialDepletePrior[iStock]
 InitialDepleteCV <- Priors$InitialDepleteCV[iStock]
 Taxon <- c(Class="Actinopterygii", Order="", Family="", Genus="", Species="")
   Priors[iStock, c("Class", "Order", "Family", "Genus", "Species")]
-Years <- 1956:2015
+Years <- 1950:2015
 NYears <- length(Years)
 Catch <- c(11200, 11300, 8700, 10000, 5800, 3400, 5200, 2700, 19200, 16400,
            25600, 40000, 31800, 34000, 30000, 38400, 50000, 78000, 88100, 86500,
@@ -96,6 +96,6 @@ set.seed(2323)
 draws <- draw.priors(N=nrep, InitialDepletePrior, InitialDepleteCV,
                      Kprior, Catch, Taxon)
 ## Run SIR to get posterior samples
-fit1 <- run.SIR(draws, deplete.mean=FinalDepleteBest,
-                deplete.cv=FinalDepleteCV)
+fit1 <- run.SIR(NY=NY, Catch=Catch, draws=draws, deplete.mean=FinalDepleteBest,
+                deplete.cv=FinalDepleteCV )
 
