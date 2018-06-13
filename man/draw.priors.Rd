@@ -4,10 +4,21 @@
 \alias{draw.priors}
 \title{Quick function to return priors for the Mexican examples.}
 \usage{
-draw.priors(N, iStock)
+draw.priors(N, InitialDepletePrior, InitialDepleteCV, Kprior, Catch, Taxon)
 }
 \arguments{
 \item{N}{Number of draws}
+
+\item{InitialDepletePrior}{Mean of initial lognormal depletion penalty}
+
+\item{InitialDepleteCV}{CV of intial lognormal depletion penalty}
+
+\item{Kprior}{Maybe a multiplier on K?}
+
+\item{Catch}{Vector of catch}
+
+\item{Taxon}{A named vector with elements "Class, Order, Family, Genus,
+Species". Either provide a name or "" to specify predictive.}
 
 \item{iStock}{Stock number (temporary)}
 }

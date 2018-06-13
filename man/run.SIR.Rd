@@ -4,14 +4,26 @@
 \alias{run.SIR}
 \title{Run the SIR algorithm for a draws and stock (temporary)}
 \usage{
-run.SIR(draws, pct.keep = 10)
+run.SIR(Catch, draws, deplete.mean = NULL, deplete.cv = NULL,
+  harvest.mean = NULL, harvest.sd = NULL, pct.keep = 10)
 }
 \arguments{
+\item{Catch}{Vector of catches, one for each year.}
+
 \item{draws}{data.frame of prior draws for SIR}
+
+\item{deplete.mean}{Final year depletion (not in log space)}
+
+\item{deplete.cv}{Final year CV, used as SD}
+
+\item{harvest.sd, }{harvest.mean The mean and SD of the terminal year
+penalty on fishing pressure. If either is NULL it is ignored.}
+
+\item{pct.keep}{The percentage of "keepers" from the total. Default 10%.}
 }
 \value{
-A list containing depletion and SSB for posterior draws, and a
-  vector of Keepers
+A list containing depletion, SSB, and harvest rate (U) for
+  posterior draws, and a vector of Keepers
 }
 \description{
 Run the SIR algorithm for a draws and stock (temporary)
