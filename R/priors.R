@@ -1,35 +1,43 @@
 
 #' Quick function to return priors for the Mexican examples.
 #' @param N Number of draws
+#' @param InitialDepletePrior Mean of initial lognormal depletion penalty
+#' @param InitialDepleteCV CV of intial lognormal depletion penalty
+#' @param Kprior Maybe a multiplier on K?
 #' @param iStock Stock number (temporary)
+#' @param Catch Vector of catch
+#' @param Taxon A named vector with elements "Class, Order, Family, Genus,
+#'   Species". Either provide a name or "" to specify predictive.
 #' @return A data.frame that contains N random draws from all priors
 #' @export
-draw.priors <- function(N, iStock){
+draw.priors <- function(N, InitialDepletePrior, InitialDepleteCV, Kprior,
+                        Catch, Taxon){
   ## initial depletion prior
-  ## InitialPrior=rnorm(nrep,Priors$InitialDepletePrior[iStock],Priors$InitialDepleteCV[iStock])
   ## Switched to a lognormal prior on intial depletion so that we're not
   ## generating negative starting values for biomass. Assuming that the
   ## values given are mean and CV and calculating the SD from that.
-  InitialPrior <- rlnorm(nrep, log(Priors$InitialDepletePrior[iStock]),
-                         sqrt(log(Priors$InitialDepleteCV[iStock]^2+1)))
+  InitialPrior <-
+    rlnorm(nrep, log(InitialDepletePrior), sqrt(log(InitialDepleteCV^2+1)))
   ## catch info
-  Catch=as.numeric(CatchData[jStock,])
-  Cmax=max(Catch,na.rm=TRUE)
+  Cmax <- max(Catch,na.rm=TRUE)
   ## carrying capacity prior
   ## correlation between maximum catch and MSY
-  Carry=Priors$Kprior[iStock]*Cmax
-  Cprior=runif(nrep,min=Carry/2,max=Carry*2)
+  Carry <- Kprior*Cmax
+  Cprior <- runif(nrep,min=Carry/2,max=Carry*2)
   ## #######################
   ## priors from FishLife
   ## #######################
   ##------------ taxonomic information for stock -------------##
   ## draw taxonomic information from depletion prior file with stock info
-  Taxon <- Priors[iStock,which(colnames(Priors) %in% c("Class", "Order", "Family", "Genus", "Species"))]
   Taxon[which(Taxon=="")] <- "predictive"
   ##------------ find information from FishLife -------------##
   ## find species within FishLife
-  sp <- Search_species(Class=Taxon[,"Class"], Order=Taxon[,"Order"], Family=Taxon[,"Family"], Genus=Taxon[,"Genus"], Species=Taxon[,"Species"], ParentChild_gz=Return$ParentChild_gz)$match_taxonomy
+  sp <- Search_species(Class=Taxon["Class"], Order=Taxon["Order"],
+                       Family=Taxon["Family"], Genus=Taxon["Genus"],
+                       Species=Taxon["Species"],
+                       ParentChild_gz=Return$ParentChild_gz)$match_taxonomy
   ## find means and covariance matrix
+  ### Is Return put on global space by Search_species??
   Which <- grep(sp[1], Return$ParentChild_gz[,"ChildName"])
   Mean <- Return$beta_gv[Which,]
   Cov <- Return$Cov_gvv[Which,,]

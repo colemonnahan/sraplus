@@ -3,6 +3,7 @@
 #' @export
 AgeModel <- function(Catch,AgeMat, Steep,NatMort, AgeMax, Carry,Weight,InitialDeplete,Sigma) {
   ## process error devations
+  NYears <- length(Catch)
   devsvector <- rnorm(NYears,mean=0,sd=Sigma)
   ## maximum age
   maxage <- AgeMax
