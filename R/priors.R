@@ -16,13 +16,13 @@ draw.priors <- function(N, InitialDepletePrior, InitialDepleteCV, Kprior,
   ## generating negative starting values for biomass. Assuming that the
   ## values given are mean and CV and calculating the SD from that.
   InitialPrior <-
-    rlnorm(nrep, log(InitialDepletePrior), sqrt(log(InitialDepleteCV^2+1)))
+    rlnorm(N, log(InitialDepletePrior), sqrt(log(InitialDepleteCV^2+1)))
   ## catch info
   Cmax <- max(Catch,na.rm=TRUE)
   ## carrying capacity prior
   ## correlation between maximum catch and MSY
   Carry <- Kprior*Cmax
-  Cprior <- runif(nrep,min=Carry/2,max=Carry*2)
+  Cprior <- runif(N,min=Carry/2,max=Carry*2)
   ## #######################
   ## priors from FishLife
   ## #######################
@@ -46,7 +46,7 @@ draw.priors <- function(N, InitialDepletePrior, InitialDepleteCV, Kprior,
   Mean_mvn <- Mean[which(names(Mean) %in% params_mvn)]
   Cov_mvn <- Cov[which(rownames(Cov) %in% params_mvn), which(colnames(Cov) %in% params_mvn)]
   ## draw random deviates from multivariate normal distribution between
-  draws_mvn <- data.frame(rmvnorm(nrep, mean=Mean_mvn, sigma=Cov_mvn))
+  draws_mvn <- data.frame(rmvnorm(N, mean=Mean_mvn, sigma=Cov_mvn))
   ## exponentiate and add length-weight params
   draws_mvn <- draws_mvn %>%
     mutate(Loo = exp(Loo)) %>%
@@ -58,8 +58,8 @@ draw.priors <- function(N, InitialDepletePrior, InitialDepleteCV, Kprior,
     mutate("lwb" = 3.04)  %>% ## from Froese, Thorson, and Reyes meta-analysis, mean value for all fish
     mutate("lwa" = Winfinity / (Loo ^ lwb))
   ##------------ recruitment deviations -------------##
-  Sigma <- rlnorm(nrep, Mean["ln_var"], 0.3)
-  Steep <- rlnorm(nrep, log(Mean["h"]), 0.1)
+  Sigma <- rlnorm(N, Mean["ln_var"], 0.3)
+  Steep <- rlnorm(N, log(Mean["h"]), 0.1)
   draws <- draws_mvn %>%
     mutate("Sigma" = Sigma) %>%
     mutate("h" = Steep) %>%
