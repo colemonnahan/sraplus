@@ -24,22 +24,23 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
   ## #########################
   ## run iterations
   ## #########################
+  draws <- as.matrix(draws) # less overhead than data.frame for subsetting
   for (irep in 1:nrep){   ##loop over replicates
     ## set priors
-    InitialDeplete <- draws$InitialPrior[irep]
-    Carry <- draws$Cprior[irep]
+    InitialDeplete <- draws[irep, 'InitialPrior']
+    Carry <- draws[irep,'Cprior']
     ## life history
-    Steep <- draws$h[irep]
-    NatMort <- draws$M[irep]
+    Steep <- draws[irep,'h']
+    NatMort <- draws[irep,'M']
     ## Sometimes these can round down to 0 so arbitrarily setting a min
-    AgeMat <- max(1,round(draws$tm[irep],0))
-    AgeMax <- max(2, AgeMat,ceiling(draws$tmax[irep]))
-    Sigma <- draws$Sigma[irep]
+    AgeMat <- max(1,round(draws[irep,'tm']))
+    AgeMax <- max(2, AgeMat,ceiling(draws[irep,'tmax']))
+    Sigma <- draws[irep,'Sigma']
     ## growth
-    lwa <- draws$lwa[irep]
-    lwb <- draws$lwb[irep]
-    Linf <- draws$Loo[irep]
-    vbk <- draws$K[irep]
+    lwa <- draws[irep,'lwa']
+    lwb <- draws[irep,'lwb']
+    Linf <- draws[irep,'Loo']
+    vbk <- draws[irep,'K']
     ages <- 1:AgeMax
     Length <- Linf*(1-exp(-vbk*ages))
     Weight <- lwa * Length ^ lwb
@@ -71,14 +72,26 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
   Nkeep <- floor((pct.keep/100*nrep))
   CumLike <- c(0,cumsum(LikeStore))
   BreakPoints <- runif(Nkeep,min=0,max=CumLike[nrep+1])
-  Keepers <- array(dim=(Nkeep))
-  k <- 1
-  for (i in 1:nrep){  #find the keepers
-    Lower <- CumLike[i]; Upper <- CumLike[i+1]
-    j <- which(BreakPoints > Lower & BreakPoints < Upper)
-    Nhits <- length(j)
-    if (Nhits>0) {Keepers[k:(k+Nhits-1)] <-  i; k <- k+Nhits}
+  get.keepers <- function(Nkeep, CumLike, BreakPoints){
+    ## This function replaces Ray's old code with a more efficienct version
+    ## that loops over the BreakPoints instead of the reps. Probably a
+    ## better way to do this but OK for now.  It returns a vector of
+    ## indices for which draws were "kept"
+    Keepers <- rep(NA, len=Nkeep)
+    for(i in 1:Nkeep){
+      Keepers[i] <- which(CumLike > BreakPoints[i])[1]-1
+    }
+    return(sort(Keepers))
   }
+  ## Keepers <- array(dim=(Nkeep))
+  ## k <- 1
+  ## for (i in 1:nrep){  #find the keepers
+  ##   Lower <- CumLike[i]; Upper <- CumLike[i+1]
+  ##   j <- which(BreakPoints > Lower & BreakPoints < Upper)
+  ##   Nhits <- length(j)
+  ##   if (Nhits>0) {Keepers[k:(k+Nhits-1)] <-  i; k <- k+Nhits}
+  ## }
+  Keepers <- get.keepers(Nkeep, CumLike, BreakPoints)
   print(paste("% unique draws=",100*length(unique(Keepers))/Nkeep))
 
   return(list(depletion=Dstore[, Keepers], ssb=Bstore[,Keepers],
