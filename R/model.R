@@ -18,9 +18,12 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
   stopifnot(AgeMat>0)
   NYears <- length(Catch)
   ## The process error deviations
-  devsvector <-
-    if(ProcessError) rnorm(NYears,mean=0,sd=Sigma)
-    else rep(0, len=NYears)
+  if(ProcessError){
+    devs <- rnorm(NYears,mean=0,sd=Sigma)
+  } else {
+    devs <- rep(0, len=NYears)
+    Sigma <- 0 # since used below in correction
+  }
   ## maximum age
   maxage <- AgeMax
   ## natural survival
@@ -74,7 +77,7 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
     ## spawning biomass
     eggs[y]  <-  sum(num*mature*Weight)
     ## recruits with process error
-    rec[y]  <-  eggs[y]/(alpha+betav*eggs[y])  * exp(devsvector[y])
+    rec[y]  <-  eggs[y]/(alpha+betav*eggs[y])  * exp(devs[y])
     ## abundance in plus group
     num[maxage] <- num[maxage]*surv*(1-hr*vuln[maxage])+num[maxage-1]*surv*(1-hr*vuln[maxage-1])  #update plus group
     ## total survival
