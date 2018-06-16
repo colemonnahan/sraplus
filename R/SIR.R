@@ -8,11 +8,14 @@
 #'   penalty on fishing pressure. If either is NULL it is ignored.
 #' @param harvest.mean Same as harvest.sd but the mean.
 #' @param Catch Vector of catches, one for each year.
+#' @param ProcessError Flag for whether to include process error
+#'   deviations, passed on to model. Defaults to TRUE.
 #' @return A list containing depletion, SSB, and harvest rate (U) for
 #'   posterior draws, and a vector of Keepers
 #'   @export
 run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
-                    harvest.mean=NULL, harvest.sd=NULL, pct.keep=10){
+                    harvest.mean=NULL, harvest.sd=NULL, pct.keep=10,
+                    ProcessError=TRUE){
   ## store results
   nrep <- nrow(draws)
   NY <- length(Catch)
@@ -44,7 +47,8 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
     ages <- 1:AgeMax
     Length <- Linf*(1-exp(-vbk*ages))
     Weight <- lwa * Length ^ lwb
-    out <- AgeModel(Catch, AgeMat, Steep,NatMort, AgeMax, Carry, Weight,InitialDeplete,Sigma)
+    out <- AgeModel(Catch, AgeMat, Steep,NatMort, AgeMax, Carry,
+                    Weight,InitialDeplete,Sigma, ProcessError=ProcessError)
     pop <- out$pop
     ## plot(Years,pop,type="l",ylim=c(0,max(pop)))
     Deplete <- pop/Carry

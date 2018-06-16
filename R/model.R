@@ -1,12 +1,17 @@
 #' Stochastic SRA to calculate the trajectory given parameters
 #' @param Catch To do
+#' @param ProcessError A flag for whether to include process error,
+#'   defaults to TRUE.
 #' @export
 AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
-                     Carry, Weight, InitialDeplete, Sigma) {
-  ## process error devations
+                     Carry, Weight, InitialDeplete, Sigma,
+                     ProcessError=TRUE){
   stopifnot(AgeMat>0)
   NYears <- length(Catch)
-  devsvector <- rnorm(NYears,mean=0,sd=Sigma)
+  ## The process error deviations
+  devsvector <-
+    if(ProcessError) rnorm(NYears,mean=0,sd=Sigma)
+    else rep(0, len=NYears)
   ## maximum age
   maxage <- AgeMax
   ## natural survival
