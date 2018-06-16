@@ -1,5 +1,14 @@
 #' Stochastic SRA to calculate the trajectory given parameters
 #' @param Catch To do
+#' @param AgeMat Age at maturity
+#' @param Steep Steepness
+#' @param NatMort Natural mortality
+#' @param AgeMax Maximum age, above which there is a plus group.
+#' @param Carry Carrying capacity.
+#' @param Weight Vector of weights at age, calculated from growth
+#'   parameters a and b.
+#' @param InitialDeplete Initial level of depletion.
+#' @param Sigma Process error variance, i.e. N(0,Sigma).
 #' @param ProcessError A flag for whether to include process error,
 #'   defaults to TRUE.
 #' @export
