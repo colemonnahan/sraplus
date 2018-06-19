@@ -110,7 +110,6 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
   get.equilibrium.catch <- function(U){
     stopifnot(is.numeric(U))
     stopifnot(U>=0); stopifnot(U<=1)
-    rzeroC <- 1000
     num0 <- num <- rep(NA, len=maxage)
     ## equilibrium numbers at age under no fishing
     for (a in 1:maxage) {
@@ -127,23 +126,23 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
         num[a]  <- num[a-1]*( (1-vuln[a-1]*U)*surv / (1-(1-vuln[a-1]*U)*surv) )
     }
     ## Now get equilibrium recruitment for U
-    SBPR0 <- sum(Weight*mature*num0)/rzeroC
-    SSB0 <- SBPR0*rzeroC
+    ## SBPR0 <- sum(Weight*mature*num0)/rzeroC
+    ## SSB0 <- SBPR0*rzeroC
+    ## spwaning biomass per recruit fishing at U
     SBPR <- sum(Weight*mature*num)/rzeroC
-    R <- (SBPR-alpha)/(betav*SBPR)
-    SSB <- SBPR*R
-    ## and equlibrium catch
+    ## recruits in equilibrium fishing at U
+    R <- max(0, (SBPR-alpha)/(betav*SBPR))
+    ## and equlibrium catch per recruit?
     Ca <- sum(num*vuln*Weight*U)
     YPR <- Ca/rzeroC
-    return(max(0,R*YPR))
+    ## Calculate catch for all recruits
+    return(R*YPR)
   }
-  u.seq <- seq(0,1, len=100)
-  c.seq <- sapply(u.seq, function(u) get.equilibrium.catch(u))
-  ## plot(u.seq, c.seq)
   fit <- optimize(get.equilibrium.catch, interval=c(0,1), maximum=TRUE)
-  points(fit$maximum, fit$objective, pch=16, col=2)
   out <- list(pop=pop, hr=hrstore, umsy=fit$maximum, cmsy=fit$objective)
   if(use.sim){
+    u.seq <- seq(0,1, len=100)
+    c.seq <- sapply(u.seq, function(u) get.equilibrium.catch(u))
     o <- list(num0=num0, num=num, Catch=Catch,
               CatchEquilibrium=get.equilibrium.catch(simulation$FishMort),
               u.seq=u.seq, c.seq=c.seq)
