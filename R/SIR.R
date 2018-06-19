@@ -22,6 +22,7 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
   Bstore <- array(dim=c(NY,nrep))
   Dstore <- array(dim=c(NY,nrep))
   Ustore <- array(dim=c(NY,nrep))
+  Uscaledstore <- array(dim=c(NY,nrep))
   LikeStore <- array(dim=nrep)
   umsy <- cmsy <- rep(NA, len=nrep)
   B <- array(dim=(NY+1))  #stock biomass
@@ -73,6 +74,7 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
     Bstore[,irep] <- pop
     Dstore[,irep] <- Deplete
     Ustore[,irep] <- out$hr
+    Uscaledstore[,irep] <- uscaled
     LikeStore[irep] <- like
     cmsy[irep] <- out$cmsy
     umsy[irep] <- out$umsy
@@ -101,12 +103,12 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
   ##   Nhits <- length(j)
   ##   if (Nhits>0) {Keepers[k:(k+Nhits-1)] <-  i; k <- k+Nhits}
   ## }
-  Keepers <- get.keepers(Nkeep, CumLike, BreakPoints)
-  print(paste("% unique draws=",100*length(unique(Keepers))/Nkeep))
-
-  return(list(depletion=Dstore[, Keepers], ssb=Bstore[,Keepers],
-              U=Ustore[,Keepers], final=list(deplete.mean=deplete.mean,
-              deplete.cv=deplete.cv, harvest.mean=harvest.mean,
-              harvest.sd=harvest.sd), Keepers=Keepers,
-              umsy=umsy[Keepers], cmsy=cmsy[Keepers]))
+  K <- get.keepers(Nkeep, CumLike, BreakPoints)
+  print(paste("% unique draws=",100*length(unique(K))/Nkeep))
+  final <- list(deplete.mean=deplete.mean,
+                deplete.cv=deplete.cv, harvest.mean=harvest.mean,
+                harvest.sd=harvest.sd)
+  return(list(depletion=Dstore[, K], ssb=Bstore[,K],
+              U=Ustore[,K], Keepers=K, final=final, umsy=umsy[K],
+              cmsy=cmsy[K], uscaled=Uscaledstore[,K]))
 }
