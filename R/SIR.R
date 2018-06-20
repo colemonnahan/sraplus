@@ -15,14 +15,16 @@
 #'   @export
 run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
                     harvest.mean=NULL, harvest.sd=NULL, pct.keep=10,
-                    ProcessError=TRUE){
+                    ProcessError=TRUE, simulation=NULL){
   ## store results
   nrep <- nrow(draws)
   NY <- length(Catch)
   Bstore <- array(dim=c(NY,nrep))
   Dstore <- array(dim=c(NY,nrep))
   Ustore <- array(dim=c(NY,nrep))
+  Uscaledstore <- array(dim=c(NY,nrep))
   LikeStore <- array(dim=nrep)
+  umsy <- cmsy <- rep(NA, len=nrep)
   B <- array(dim=(NY+1))  #stock biomass
   ## #########################
   ## run iterations
@@ -48,10 +50,13 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
     Length <- Linf*(1-exp(-vbk*ages))
     Weight <- lwa * Length ^ lwb
     out <- AgeModel(Catch, AgeMat, Steep,NatMort, AgeMax, Carry,
-                    Weight,InitialDeplete,Sigma, ProcessError=ProcessError)
+                    Weight,InitialDeplete,Sigma, ProcessError=ProcessError,
+                    simulation=simulation)
     pop <- out$pop
     ## plot(Years,pop,type="l",ylim=c(0,max(pop)))
     Deplete <- pop/Carry
+    ## Calculate U/UMSY by year
+    uscaled <- out$hr/out$umsy
     ## This is the final year "penalty" on an assumed level of depletion or
     ## harvest rate (or both). If the biomass crashes it will return a
     ## vector with NA's, so catch those here and assign a zero likelihood
@@ -63,13 +68,16 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
         loglike1 <- dnorm(Deplete[NY],mean=deplete.mean,sd=deplete.cv, log=TRUE)
       ## If specified, include penalty for harvest rate in final year
       if(!is.null(harvest.mean) & !is.null(harvest.sd))
-        loglike2 <- dnorm(out$hr[NY],mean=harvest.mean,sd=harvest.sd, log=TRUE)
+        loglike2 <- dnorm(uscaled[NY],mean=harvest.mean,sd=harvest.sd, log=TRUE)
       like <- exp(loglike1+loglike2)
     }
     Bstore[,irep] <- pop
     Dstore[,irep] <- Deplete
     Ustore[,irep] <- out$hr
+    Uscaledstore[,irep] <- uscaled
     LikeStore[irep] <- like
+    cmsy[irep] <- out$cmsy
+    umsy[irep] <- out$umsy
   } #end of loop over replicates
 
   ## filter keepers
@@ -95,11 +103,12 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
   ##   Nhits <- length(j)
   ##   if (Nhits>0) {Keepers[k:(k+Nhits-1)] <-  i; k <- k+Nhits}
   ## }
-  Keepers <- get.keepers(Nkeep, CumLike, BreakPoints)
-  print(paste("% unique draws=",100*length(unique(Keepers))/Nkeep))
-
-  return(list(depletion=Dstore[, Keepers], ssb=Bstore[,Keepers],
-              U=Ustore[,Keepers], final=list(deplete.mean=deplete.mean,
-              deplete.cv=deplete.cv, harvest.mean=harvest.mean,
-              harvest.sd=harvest.sd), Keepers=Keepers))
+  K <- get.keepers(Nkeep, CumLike, BreakPoints)
+  print(paste("% unique draws=",100*length(unique(K))/Nkeep))
+  final <- list(deplete.mean=deplete.mean,
+                deplete.cv=deplete.cv, harvest.mean=harvest.mean,
+                harvest.sd=harvest.sd)
+  return(list(depletion=Dstore[, K], ssb=Bstore[,K],
+              U=Ustore[,K], Keepers=K, final=final, umsy=umsy[K],
+              cmsy=cmsy[K], uscaled=Uscaledstore[,K]))
 }

@@ -14,9 +14,16 @@
 #' @export
 AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
                      Carry, Weight, InitialDeplete, Sigma,
-                     ProcessError=TRUE){
+                     ProcessError=TRUE, simulation=NULL){
   stopifnot(AgeMat>0)
-  NYears <- length(Catch)
+  use.sim <- !is.null(simulation)
+  if(use.sim){
+    stopifnot(is.numeric(simulation$FishMort))
+    stopifnot(simulation$FishMort>=0); stopifnot(simulation$FishMort<=1)
+    NYears <- simulation$NYears
+  } else {
+    NYears <- length(Catch)
+  }
   ## The process error deviations
   if(ProcessError){
     devs <- rnorm(NYears,mean=0,sd=Sigma)
@@ -33,9 +40,9 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
   ## 100% selectivity option
   if(AgeMat>1){
     ## assume knife edge selectivity
-    vuln[1:(AgeMat-1)] <- 1
+    vuln[1:(AgeMat-1)] <- 0
   }
-  ## assume logistic maturity
+  ## assume logistic maturity with 50% at AgeMat
   mature  <-  1 / (1 + exp(AgeMat - 1:AgeMax))
   ## per recruit
   rzero <- 1  #to get sbpr
@@ -56,7 +63,7 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
   alpha <- (bzero*(1-Steep))/(4*Steep*rzeroC)
   betav <- (5*Steep-1)/(4*Steep*rzeroC)
   ## set initial numbers at age
-  num <- num*rzero*InitialDeplete
+  num0 <- num <- num*rzero*InitialDeplete
   ##  now loop over time
   ## bio is spawning biomass; pop is vulnerable biomass; rec is recruits;
   ## hrstore is the harvest rate
@@ -66,6 +73,9 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
   for (y in 1:NYears) {
     ## vulnerable biomass
     Vpop <- sum(num*vuln*Weight)
+    ## if simulating a population, calculate Catch
+    if(use.sim)
+      Catch[y] <- simulation$FishMort*Vpop
     ## harvest rate based on catch
     hr <- Catch[y]/Vpop
     ## hr <- min(.9,Catch[y]/Vpop)
@@ -92,6 +102,37 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
     }
     if(any(num<0)) {message("breaking due to crashed pop") ;break}
   } #end of loop over time
-  return(list(pop=pop, hr=hrstore))
+
+  ## Calculate UMSY
+  ##  Weight <- c(0.35, 0.57, 0.78, 0.97, 1.14, 1.27, 1.37, 1.46, 1.52, 1.57, 1.60, 1.63, 1.65, 1.67, 1.68, 1.68)
+  get.equilibrium.catch <- function(U){
+    ## equilibrium numbers at age under rate U
+    num[1]  <-  rzeroC
+    for (a in 2:(maxage-1))
+      num[a]  <-  (1-vuln[a-1]*U)*num[a-1]*surv
+    ## plus group
+    num[maxage]  <- num[a-1]*( (1-vuln[a-1]*U)*surv / (1-(1-vuln[a-1]*U)*surv) )
+    ## spwaning biomass per recruit fishing at U
+    SBPR <- sum(Weight*mature*num)/rzeroC
+    ## recruits in equilibrium fishing at U
+    R <- max(0, (SBPR-alpha)/(betav*SBPR))
+    ## and equlibrium catch per recruit?
+    Ca <- sum(num*vuln*Weight*U)
+    YPR <- Ca/rzeroC
+    ## Calculate catch for all recruits
+    return(R*YPR)
+  }
+  fit <- optimize(get.equilibrium.catch, interval=c(0,1), maximum=TRUE,
+                  tol=.001)
+  out <- list(pop=pop, hr=hrstore, umsy=fit$maximum, cmsy=fit$objective)
+  if(use.sim){
+    u.seq <- seq(0,1, len=100)
+    c.seq <- sapply(u.seq, function(u) get.equilibrium.catch(u))
+    o <- list(num0=num0, num=num, Catch=Catch,
+              CatchEquilibrium=get.equilibrium.catch(simulation$FishMort),
+              u.seq=u.seq, c.seq=c.seq)
+    out <- c(out, o)
+  }
+  return(out)
 } #end of function
 
