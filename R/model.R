@@ -18,6 +18,8 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
   stopifnot(AgeMat>0)
   use.sim <- !is.null(simulation)
   if(use.sim){
+    stopifnot(is.numeric(simulation$FishMort))
+    stopifnot(simulation$FishMort>=0); stopifnot(simulation$FishMort<=1)
     NYears <- simulation$NYears
   } else {
     NYears <- length(Catch)
@@ -104,23 +106,12 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
   ## Calculate UMSY
   ##  Weight <- c(0.35, 0.57, 0.78, 0.97, 1.14, 1.27, 1.37, 1.46, 1.52, 1.57, 1.60, 1.63, 1.65, 1.67, 1.68, 1.68)
   get.equilibrium.catch <- function(U){
-    stopifnot(is.numeric(U))
-    stopifnot(U>=0); stopifnot(U<=1)
-    num0 <- num <- rep(NA, len=maxage)
-    ## equilibrium numbers at age under no fishing
-    for (a in 1:maxage) {
-      if (a==1) num0[a]  <-  rzeroC   else num0[a] <- num0[a-1]*surv
-      ## plus group
-      if (a==maxage)
-        num0[a]  <- num0[a-1]*surv / (1-surv)
-    }
     ## equilibrium numbers at age under rate U
-    for (a in 1:maxage) {
-      if (a==1) num[a]  <-  rzeroC   else num[a]  <-  (1-vuln[a-1]*U)*num[a-1]*surv
-      ## plus group
-      if (a==maxage)
-        num[a]  <- num[a-1]*( (1-vuln[a-1]*U)*surv / (1-(1-vuln[a-1]*U)*surv) )
-    }
+    num[1]  <-  rzeroC
+    for (a in 2:(maxage-1))
+      num[a]  <-  (1-vuln[a-1]*U)*num[a-1]*surv
+    ## plus group
+    num[maxage]  <- num[a-1]*( (1-vuln[a-1]*U)*surv / (1-(1-vuln[a-1]*U)*surv) )
     ## Now get equilibrium recruitment for U
     ## SBPR0 <- sum(Weight*mature*num0)/rzeroC
     ## SSB0 <- SBPR0*rzeroC
