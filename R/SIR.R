@@ -3,10 +3,13 @@
 #' @param draws data.frame of prior draws for SIR
 #' @param deplete.mean Final year depletion (not in log space)
 #' @param deplete.cv Final year CV, used as SD
+#' @param deplete.distribution The likelhiood to use, either (1) normal or
+#'   (2) lognormal
 #' @param pct.keep The percentage of "keepers" from the total. Default 10\%.
 #' @param harvest.sd The mean and SD of the terminal year
 #'   penalty on fishing pressure. If either is NULL it is ignored.
 #' @param harvest.mean Same as harvest.sd but the mean.
+#' @param harvest.distribution Same choice as deplete.distribution.
 #' @param Catch Vector of catches, one for each year.
 #' @param ProcessError Flag for whether to include process error
 #'   deviations, passed on to model. Defaults to TRUE.
@@ -14,8 +17,9 @@
 #'   posterior draws, and a vector of Keepers
 #'   @export
 run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
+                    deplete.distribution=1, harvest.distribution=1,
                     harvest.mean=NULL, harvest.sd=NULL, pct.keep=10,
-                    ProcessError=TRUE, simulation=NULL){
+                    ProcessError=TRUE, penalties=NULL, simulation=NULL){
   ## store results
   nrep <- nrow(draws)
   NY <- length(Catch)
@@ -23,7 +27,7 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
   Dstore <- array(dim=c(NY,nrep))
   Ustore <- array(dim=c(NY,nrep))
   Uscaledstore <- array(dim=c(NY,nrep))
-  LikeStore <- array(dim=nrep)
+  LikeStore <- rep(0, len=nrep)
   umsy <- cmsy <- rep(NA, len=nrep)
   B <- array(dim=(NY+1))  #stock biomass
   ## #########################
@@ -60,22 +64,23 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
     ## This is the final year "penalty" on an assumed level of depletion or
     ## harvest rate (or both). If the biomass crashes it will return a
     ## vector with NA's, so catch those here and assign a zero likelihood
-    if(any(is.na(pop))){
-      like <- 0
-    } else {
-      loglike1 <- loglike2 <- 0
-      if(!is.null(deplete.mean) & !is.null(deplete.cv))
-        loglike1 <- dnorm(Deplete[NY],mean=deplete.mean,sd=deplete.cv, log=TRUE)
+    if(all(!is.na(pop))){
+      loglike <- 0
+      if(!is.null(deplete.mean) & !is.null(deplete.cv)){
+        x <- ifelse(deplete.distribution==1, Deplete[NY], log(Deplete[NY]))
+        loglike <- loglike + dnorm(x,mean=deplete.mean,sd=deplete.cv, log=TRUE)
+      }
       ## If specified, include penalty for harvest rate in final year
-      if(!is.null(harvest.mean) & !is.null(harvest.sd))
-        loglike2 <- dnorm(uscaled[NY],mean=harvest.mean,sd=harvest.sd, log=TRUE)
-      like <- exp(loglike1+loglike2)
-    }
+      if(!is.null(harvest.mean) & !is.null(harvest.sd)){
+        x <- ifelse(harvest.distribution==1, uscaled[NY], log(uscaled[NY]))
+        loglike <- loglike + dnorm(x, mean=harvest.mean, sd=harvest.sd, log=TRUE)
+      }
+      LikeStore[irep] <- exp(loglike)
+    } # otherwise it is 0 by default
     Bstore[,irep] <- pop
     Dstore[,irep] <- Deplete
     Ustore[,irep] <- out$hr
     Uscaledstore[,irep] <- uscaled
-    LikeStore[irep] <- like
     cmsy[irep] <- out$cmsy
     umsy[irep] <- out$umsy
   } #end of loop over replicates
@@ -106,8 +111,9 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
   K <- get.keepers(Nkeep, CumLike, BreakPoints)
   print(paste("% unique draws=",100*length(unique(K))/Nkeep))
   final <- list(deplete.mean=deplete.mean,
-                deplete.cv=deplete.cv, harvest.mean=harvest.mean,
-                harvest.sd=harvest.sd)
+                deplete.cv=deplete.cv, deplete.distribution,
+                harvest.mean=harvest.mean,
+                harvest.sd=harvest.sd, harvest.distribution=harvest.distribution)
   return(list(depletion=Dstore[, K], ssb=Bstore[,K],
               U=Ustore[,K], Keepers=K, final=final, umsy=umsy[K],
               cmsy=cmsy[K], uscaled=Uscaledstore[,K]))
