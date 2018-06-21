@@ -124,7 +124,7 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
     return(R*YPR)
   }
   ## If a realistic trajectory calculate MSY
-  if(any(is.na(num))){
+  if(any(is.na(pop))){
     crashed <- TRUE
     fit <- list(maximum=NA, objective=NA)
   } else {
