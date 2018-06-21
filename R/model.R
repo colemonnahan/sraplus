@@ -70,6 +70,7 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
   hrstore <-  bio <- pop <- rec <- eggs <-
     rep(NA, length=NYears)
   ##  tsurv <- c(1:maxage) ## total survival
+  crashed <- FALSE
   for (y in 1:NYears) {
     ## vulnerable biomass
     Vpop <- sum(num*vuln*Weight)
@@ -100,7 +101,7 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
       ## recruitment
       num[1] <-  rec[y-1]
     }
-    if(any(num<0)) {message("breaking due to crashed pop") ;break}
+    if(any(num<0)) break
   } #end of loop over time
 
   ## Calculate UMSY
@@ -123,13 +124,15 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
     return(R*YPR)
   }
   ## If a realistic trajectory calculate MSY
-  if(any(num<0)){
+  if(any(is.na(num))){
+    crashed <- TRUE
     fit <- list(maximum=NA, objective=NA)
   } else {
     fit <- optimize(get.equilibrium.catch, interval=c(0,1), maximum=TRUE,
                     tol=.001)
   }
-  out <- list(pop=pop, hr=hrstore, umsy=fit$maximum, cmsy=fit$objective)
+  out <- list(pop=pop, hr=hrstore, umsy=fit$maximum, cmsy=fit$objective,
+              crashed=crashed)
   if(use.sim){
     u.seq <- seq(0,1, len=100)
     c.seq <- sapply(u.seq, function(u) get.equilibrium.catch(u))

@@ -28,7 +28,7 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
   Ustore <- array(dim=c(NY,nrep))
   Uscaledstore <- array(dim=c(NY,nrep))
   LikeStore <- rep(0, len=nrep)
-  umsy <- cmsy <- rep(NA, len=nrep)
+  umsy <- cmsy <- crashed <- rep(NA, len=nrep)
   B <- array(dim=(NY+1))  #stock biomass
   ## #########################
   ## run iterations
@@ -43,7 +43,7 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
     NatMort <- draws[irep,'M']
     ## Sometimes these can round down to 0 so arbitrarily setting a min
     AgeMat <- max(1,round(draws[irep,'tm']))
-    AgeMax <- max(2, AgeMat,ceiling(draws[irep,'tmax']))
+    AgeMax <- max(4, AgeMat,ceiling(draws[irep,'tmax']))
     Sigma <- draws[irep,'Sigma']
     ## growth
     lwa <- draws[irep,'lwa']
@@ -83,6 +83,7 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
     Uscaledstore[,irep] <- uscaled
     cmsy[irep] <- out$cmsy
     umsy[irep] <- out$umsy
+    crashed[irep] <- out$crashed
   } #end of loop over replicates
 
   ## filter keepers
@@ -109,7 +110,7 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
   ##   if (Nhits>0) {Keepers[k:(k+Nhits-1)] <-  i; k <- k+Nhits}
   ## }
   K <- get.keepers(Nkeep, CumLike, BreakPoints)
-  print(paste("% unique draws=",100*length(unique(K))/Nkeep))
+  print(paste0("# crashed=", sum(crashed),";  % unique draws=",100*length(unique(K))/Nkeep))
   final <- list(deplete.mean=deplete.mean,
                 deplete.cv=deplete.cv, deplete.distribution,
                 harvest.mean=harvest.mean,
