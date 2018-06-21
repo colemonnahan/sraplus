@@ -122,8 +122,13 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
     ## Calculate catch for all recruits
     return(R*YPR)
   }
-  fit <- optimize(get.equilibrium.catch, interval=c(0,1), maximum=TRUE,
-                  tol=.001)
+  ## If a realistic trajectory calculate MSY
+  if(any(num<0)){
+    fit <- list(maximum=NA, objective=NA)
+  } else {
+    fit <- optimize(get.equilibrium.catch, interval=c(0,1), maximum=TRUE,
+                    tol=.001)
+  }
   out <- list(pop=pop, hr=hrstore, umsy=fit$maximum, cmsy=fit$objective)
   if(use.sim){
     u.seq <- seq(0,1, len=100)
