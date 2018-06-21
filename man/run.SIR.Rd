@@ -5,7 +5,9 @@
 \title{Run the SIR algorithm for a draws and stock (temporary)}
 \usage{
 run.SIR(Catch, draws, deplete.mean = NULL, deplete.cv = NULL,
-  harvest.mean = NULL, harvest.sd = NULL, pct.keep = 10)
+  deplete.distribution = 1, harvest.distribution = 1, harvest.mean = NULL,
+  harvest.sd = NULL, pct.keep = 10, ProcessError = TRUE,
+  penalties = NULL, simulation = NULL)
 }
 \arguments{
 \item{Catch}{Vector of catches, one for each year.}
@@ -16,12 +18,20 @@ run.SIR(Catch, draws, deplete.mean = NULL, deplete.cv = NULL,
 
 \item{deplete.cv}{Final year CV, used as SD}
 
+\item{deplete.distribution}{The likelhiood to use, either (1) normal or
+(2) lognormal}
+
+\item{harvest.distribution}{Same choice as deplete.distribution.}
+
 \item{harvest.mean}{Same as harvest.sd but the mean.}
 
 \item{harvest.sd}{The mean and SD of the terminal year
 penalty on fishing pressure. If either is NULL it is ignored.}
 
 \item{pct.keep}{The percentage of "keepers" from the total. Default 10\%.}
+
+\item{ProcessError}{Flag for whether to include process error
+deviations, passed on to model. Defaults to TRUE.}
 }
 \value{
 A list containing depletion, SSB, and harvest rate (U) for

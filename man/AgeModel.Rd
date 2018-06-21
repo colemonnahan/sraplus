@@ -5,10 +5,30 @@
 \title{Stochastic SRA to calculate the trajectory given parameters}
 \usage{
 AgeModel(Catch, AgeMat, Steep, NatMort, AgeMax, Carry, Weight, InitialDeplete,
-  Sigma)
+  Sigma, ProcessError = TRUE, simulation = NULL)
 }
 \arguments{
 \item{Catch}{To do}
+
+\item{AgeMat}{Age at maturity}
+
+\item{Steep}{Steepness}
+
+\item{NatMort}{Natural mortality}
+
+\item{AgeMax}{Maximum age, above which there is a plus group.}
+
+\item{Carry}{Carrying capacity.}
+
+\item{Weight}{Vector of weights at age, calculated from growth
+parameters a and b.}
+
+\item{InitialDeplete}{Initial level of depletion.}
+
+\item{Sigma}{Process error variance, i.e. N(0,Sigma).}
+
+\item{ProcessError}{A flag for whether to include process error,
+defaults to TRUE.}
 }
 \description{
 Stochastic SRA to calculate the trajectory given parameters
