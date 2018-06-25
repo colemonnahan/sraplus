@@ -105,8 +105,8 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
   } #end of loop over time
 
   ## Calculate UMSY
-  ##  Weight <- c(0.35, 0.57, 0.78, 0.97, 1.14, 1.27, 1.37, 1.46, 1.52, 1.57, 1.60, 1.63, 1.65, 1.67, 1.68, 1.68)
-  get.equilibrium.catch <- function(U){
+  get.equilibrium.catch <- function(U, biomass=FALSE){
+    ## biomass flag is whether to return cmsy or bmsy, see below
     ## equilibrium numbers at age under rate U
     num[1]  <-  rzeroC
     for (a in 2:(maxage-1))
@@ -121,15 +121,22 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
     Ca <- sum(num*vuln*Weight*U)
     YPR <- Ca/rzeroC
     ## Calculate catch for all recruits
-    return(R*YPR)
+    if(biomass)
+      ## BMSY
+      return (SBPR*R)
+    else
+      ## CMSY
+      return(R*YPR)
   }
   ## If a realistic trajectory calculate MSY
   if(any(is.na(pop))){
     crashed <- TRUE
     fit <- list(maximum=NA, objective=NA)
   } else {
+#    browser()
     fit <- optimize(get.equilibrium.catch, interval=c(0,1), maximum=TRUE,
                     tol=.001)
+    get.equilibrium.catch(fit$maximum, biomass=TRUE)
   }
   out <- list(pop=pop, hr=hrstore, umsy=fit$maximum, cmsy=fit$objective,
               crashed=crashed)
