@@ -134,13 +134,12 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
     crashed <- TRUE; bmsy <- NA
     fit <- list(maximum=NA, objective=NA)
   } else {
-#    browser()
     fit <- optimize(get.equilibrium.catch, interval=c(0,1), maximum=TRUE,
                     tol=.001)
     ## after finding cmsy put it back in to get bmsy
     bmsy <- get.equilibrium.catch(fit$maximum, biomass=TRUE)
   }
-  out <- list(pop=pop, hr=hrstore, umsy=fit$maximum, cmsy=fit$objective,
+  out <- list(pop=pop, Vpop=Vpop, hr=hrstore, umsy=fit$maximum, cmsy=fit$objective,
               bmsy=bmsy, crashed=crashed)
   if(use.sim){
     u.seq <- seq(0,1, len=100)

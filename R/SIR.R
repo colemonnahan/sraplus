@@ -26,7 +26,7 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
   Bstore <- array(dim=c(NY,nrep))
   Dstore <- array(dim=c(NY,nrep))
   Ustore <- array(dim=c(NY,nrep))
-  Uscaledstore <- array(dim=c(NY,nrep))
+  Bscaledstore <- Uscaledstore <- array(dim=c(NY,nrep))
   LikeStore <- rep(0, len=nrep)
   umsy <- cmsy <- crashed <- rep(NA, len=nrep)
   B <- array(dim=(NY+1))  #stock biomass
@@ -59,15 +59,16 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
     pop <- out$pop
     ## plot(Years,pop,type="l",ylim=c(0,max(pop)))
     Deplete <- pop/Carry
-    ## Calculate U/UMSY by year
+    ## Calculate U/UMSY and B/BMSY by year
     uscaled <- out$hr/out$umsy
+    bscaled <- out$Vpop/out$bmsy
     ## This is the final year "penalty" on an assumed level of depletion or
     ## harvest rate (or both). If the biomass crashes it will return a
     ## vector with NA's, so catch those here and assign a zero likelihood
     if(all(!is.na(pop))){
       loglike <- 0
       if(!is.null(deplete.mean) & !is.null(deplete.cv)){
-        x <- ifelse(deplete.distribution==1, Deplete[NY], log(Deplete[NY]))
+        x <- ifelse(deplete.distribution==1, bscaled[NY], log(bscaled[NY]))
         loglike <- loglike + dnorm(x,mean=deplete.mean,sd=deplete.cv, log=TRUE)
       }
       ## If specified, include penalty for harvest rate in final year
@@ -81,6 +82,7 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
     Dstore[,irep] <- Deplete
     Ustore[,irep] <- out$hr
     Uscaledstore[,irep] <- uscaled
+    Bscaledstore[,irep] <- bscaled
     cmsy[irep] <- out$cmsy
     umsy[irep] <- out$umsy
     crashed[irep] <- out$crashed
@@ -117,5 +119,6 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
                 harvest.sd=harvest.sd, harvest.distribution=harvest.distribution)
   return(list(depletion=Dstore[, K], ssb=Bstore[,K],
               U=Ustore[,K], Keepers=K, final=final, umsy=umsy[K],
-              cmsy=cmsy[K], uscaled=Uscaledstore[,K]))
+              cmsy=cmsy[K], uscaled=Uscaledstore[,K],
+              bscaled=Bscaledstore[,K]))
 }
