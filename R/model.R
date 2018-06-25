@@ -67,18 +67,18 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
   ##  now loop over time
   ## bio is spawning biomass; pop is vulnerable biomass; rec is recruits;
   ## hrstore is the harvest rate
-  hrstore <-  bio <- pop <- rec <- eggs <-
+  Vpop <- hrstore <-  bio <- pop <- rec <- eggs <-
     rep(NA, length=NYears)
   ##  tsurv <- c(1:maxage) ## total survival
   crashed <- FALSE
   for (y in 1:NYears) {
     ## vulnerable biomass
-    Vpop <- sum(num*vuln*Weight)
+    Vpop[y] <- sum(num*vuln*Weight)
     ## if simulating a population, calculate Catch
     if(use.sim)
-      Catch[y] <- simulation$FishMort*Vpop
+      Catch[y] <- simulation$FishMort*Vpop[y]
     ## harvest rate based on catch
-    hr <- Catch[y]/Vpop
+    hr <- Catch[y]/Vpop[y]
     ## hr <- min(.9,Catch[y]/Vpop)
     hrstore[y] <- hr
     if(hr>1) break ## break if caught more than available
@@ -105,14 +105,14 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
   } #end of loop over time
 
   ## Calculate UMSY
-  ##  Weight <- c(0.35, 0.57, 0.78, 0.97, 1.14, 1.27, 1.37, 1.46, 1.52, 1.57, 1.60, 1.63, 1.65, 1.67, 1.68, 1.68)
-  get.equilibrium.catch <- function(U){
+  get.equilibrium.catch <- function(U, biomass=FALSE){
+    ## biomass flag is whether to return cmsy or bmsy, see below
     ## equilibrium numbers at age under rate U
     num[1]  <-  rzeroC
     for (a in 2:(maxage-1))
       num[a]  <-  (1-vuln[a-1]*U)*num[a-1]*surv
     ## plus group
-    num[maxage]  <- num[a-1]*( (1-vuln[a-1]*U)*surv / (1-(1-vuln[a-1]*U)*surv) )
+    num[maxage]  <- num[maxage-1]*( (1-vuln[maxage-1]*U)*surv / (1-(1-vuln[maxage-1]*U)*surv) )
     ## spwaning biomass per recruit fishing at U
     SBPR <- sum(Weight*mature*num)/rzeroC
     ## recruits in equilibrium fishing at U
@@ -121,24 +121,34 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
     Ca <- sum(num*vuln*Weight*U)
     YPR <- Ca/rzeroC
     ## Calculate catch for all recruits
-    return(R*YPR)
+    if(biomass)
+      ## equilibrium biomass is vulnerable biomass per recruit times
+      ## equilibrium recruits
+      return (sum(Weight*num*vuln)/rzeroC*R)
+    else
+      ## equilibrium catch is yield per recruit times equilibrium recruits
+      return(R*YPR)
   }
   ## If a realistic trajectory calculate MSY
   if(any(is.na(pop))){
-    crashed <- TRUE
+    crashed <- TRUE; bmsy <- NA
     fit <- list(maximum=NA, objective=NA)
   } else {
     fit <- optimize(get.equilibrium.catch, interval=c(0,1), maximum=TRUE,
                     tol=.001)
+    ## after finding cmsy put it back in to get bmsy
+    bmsy <- get.equilibrium.catch(fit$maximum, biomass=TRUE)
   }
-  out <- list(pop=pop, hr=hrstore, umsy=fit$maximum, cmsy=fit$objective,
-              crashed=crashed)
+  out <- list(pop=pop, Vpop=Vpop, hr=hrstore, umsy=fit$maximum, cmsy=fit$objective,
+              bmsy=bmsy, crashed=crashed)
   if(use.sim){
     u.seq <- seq(0,1, len=100)
     c.seq <- sapply(u.seq, function(u) get.equilibrium.catch(u))
-    o <- list(num0=num0, num=num, Catch=Catch,
+    b.seq <- sapply(u.seq, function(u) get.equilibrium.catch(u, biomass=TRUE))
+    o <- list(num0=num0, num=num, Catch=Catch, Vpop=Vpop,
               CatchEquilibrium=get.equilibrium.catch(simulation$FishMort),
-              u.seq=u.seq, c.seq=c.seq)
+              BiomassEquilibrium=get.equilibrium.catch(simulation$FishMort, TRUE),
+              u.seq=u.seq, c.seq=c.seq, b.seq=b.seq)
     out <- c(out, o)
   }
   return(out)
