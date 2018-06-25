@@ -112,7 +112,7 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
     for (a in 2:(maxage-1))
       num[a]  <-  (1-vuln[a-1]*U)*num[a-1]*surv
     ## plus group
-    num[maxage]  <- num[a-1]*( (1-vuln[a-1]*U)*surv / (1-(1-vuln[a-1]*U)*surv) )
+    num[maxage]  <- num[maxage-1]*( (1-vuln[maxage-1]*U)*surv / (1-(1-vuln[maxage-1]*U)*surv) )
     ## spwaning biomass per recruit fishing at U
     SBPR <- sum(Weight*mature*num)/rzeroC
     ## recruits in equilibrium fishing at U
