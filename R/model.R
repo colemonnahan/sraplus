@@ -67,18 +67,18 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
   ##  now loop over time
   ## bio is spawning biomass; pop is vulnerable biomass; rec is recruits;
   ## hrstore is the harvest rate
-  hrstore <-  bio <- pop <- rec <- eggs <-
+  Vpop <- hrstore <-  bio <- pop <- rec <- eggs <-
     rep(NA, length=NYears)
   ##  tsurv <- c(1:maxage) ## total survival
   crashed <- FALSE
   for (y in 1:NYears) {
     ## vulnerable biomass
-    Vpop <- sum(num*vuln*Weight)
+    Vpop[y] <- sum(num*vuln*Weight)
     ## if simulating a population, calculate Catch
     if(use.sim)
-      Catch[y] <- simulation$FishMort*Vpop
+      Catch[y] <- simulation$FishMort*Vpop[y]
     ## harvest rate based on catch
-    hr <- Catch[y]/Vpop
+    hr <- Catch[y]/Vpop[y]
     ## hr <- min(.9,Catch[y]/Vpop)
     hrstore[y] <- hr
     if(hr>1) break ## break if caught more than available
@@ -122,30 +122,34 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
     YPR <- Ca/rzeroC
     ## Calculate catch for all recruits
     if(biomass)
-      ## BMSY
-      return (SBPR*R)
+      ## equilibrium biomass is vulnerable biomass per recruit times
+      ## equilibrium recruits
+      return (sum(Weight*num*vuln)/rzeroC*R)
     else
-      ## CMSY
+      ## equilibrium catch is yield per recruit times equilibrium recruits
       return(R*YPR)
   }
   ## If a realistic trajectory calculate MSY
   if(any(is.na(pop))){
-    crashed <- TRUE
+    crashed <- TRUE; bmsy <- NA
     fit <- list(maximum=NA, objective=NA)
   } else {
 #    browser()
     fit <- optimize(get.equilibrium.catch, interval=c(0,1), maximum=TRUE,
                     tol=.001)
-    get.equilibrium.catch(fit$maximum, biomass=TRUE)
+    ## after finding cmsy put it back in to get bmsy
+    bmsy <- get.equilibrium.catch(fit$maximum, biomass=TRUE)
   }
   out <- list(pop=pop, hr=hrstore, umsy=fit$maximum, cmsy=fit$objective,
-              crashed=crashed)
+              bmsy=bmsy, crashed=crashed)
   if(use.sim){
     u.seq <- seq(0,1, len=100)
     c.seq <- sapply(u.seq, function(u) get.equilibrium.catch(u))
-    o <- list(num0=num0, num=num, Catch=Catch,
+    b.seq <- sapply(u.seq, function(u) get.equilibrium.catch(u, biomass=TRUE))
+    o <- list(num0=num0, num=num, Catch=Catch, Vpop=Vpop,
               CatchEquilibrium=get.equilibrium.catch(simulation$FishMort),
-              u.seq=u.seq, c.seq=c.seq)
+              BiomassEquilibrium=get.equilibrium.catch(simulation$FishMort, TRUE),
+              u.seq=u.seq, c.seq=c.seq, b.seq=b.seq)
     out <- c(out, o)
   }
   return(out)
