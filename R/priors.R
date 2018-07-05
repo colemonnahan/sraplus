@@ -36,13 +36,13 @@ draw.priors <- function(N, InitialDepletePrior, InitialDepleteCV, Kprior,
                        Species=Taxon["Species"],
                        ParentChild_gz=Return$ParentChild_gz)$match_taxonomy
   ## find means and covariance matrix
-  ### Is Return put on global space by Search_species??
   Which <- grep(sp[1], Return$ParentChild_gz[,"ChildName"])
   Mean <- Return$beta_gv[Which,]
   Cov <- Return$Cov_gvv[Which,,]
   ##------------ deviates from multivariate normal -------------##
   ## parameters for multvariate normal distribution
-  params_mvn <- c("tm", "M", "tmax", "Loo", "K", "Winfinity") #"ln_var", "Loo", "h", "logitbound_h")
+  ##  params_mvn <- c("tm", "M", "tmax", "Loo", "K", "Winfinity") #"ln_var", "Loo", "h", "logitbound_h")
+  params_mvn <- c("tm", "M", "tmax", "Loo", "K", "Winfinity","ln_var", "logitbound_h")
   Mean_mvn <- Mean[which(names(Mean) %in% params_mvn)]
   Cov_mvn <- Cov[which(rownames(Cov) %in% params_mvn), which(colnames(Cov) %in% params_mvn)]
   ## draw random deviates from multivariate normal distribution between
@@ -56,14 +56,12 @@ draw.priors <- function(N, InitialDepletePrior, InitialDepleteCV, Kprior,
     mutate(tm = exp(tm)) %>%
     mutate(M = exp(M)) %>%
     mutate("lwb" = 3.04)  %>% ## from Froese, Thorson, and Reyes meta-analysis, mean value for all fish
-    mutate("lwa" = Winfinity / (Loo ^ lwb))
-  ##------------ recruitment deviations -------------##
-  Sigma <- rlnorm(N, Mean["ln_var"], 0.3)
-  Steep <- rlnorm(N, log(Mean["h"]), 0.1)
-  draws <- draws_mvn %>%
-    mutate("Sigma" = Sigma) %>%
-    mutate("h" = Steep) %>%
+    mutate("lwa" = Winfinity / (Loo ^ lwb)) %>%
+    mutate("h"=  0.2+ 0.8*(1/(1+exp(-logitbound_h)))) %>%
+    mutate("Sigma"=exp(ln_var)) %>%
     mutate("Cprior"=Cprior) %>%
     mutate("InitialPrior"=InitialPrior)
+  draws <- draws_mvn
+  draws$logitbound_h <- draws$ln_var <- NULL
   return(draws)
 }
