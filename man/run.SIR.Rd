@@ -36,7 +36,6 @@ deviations, passed on to model. Defaults to TRUE.}
 \value{
 A list containing depletion, SSB, and harvest rate (U) for
   posterior draws, and a vector of Keepers
-  @export
 }
 \description{
 Run the SIR algorithm for a draws and stock (temporary)

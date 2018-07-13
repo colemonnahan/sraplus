@@ -15,7 +15,9 @@
 #'   deviations, passed on to model. Defaults to TRUE.
 #' @return A list containing depletion, SSB, and harvest rate (U) for
 #'   posterior draws, and a vector of Keepers
-#'   @export
+#'
+#' @export
+#'
 run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
                     deplete.distribution=1, harvest.distribution=1,
                     harvest.mean=NULL, harvest.sd=NULL, pct.keep=10,

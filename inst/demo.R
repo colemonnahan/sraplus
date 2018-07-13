@@ -3,7 +3,7 @@
 library(FishLife)
 library(mvtnorm)
 library(dplyr)
-devtools::load_all('C:/Users/Cole/sraplus')
+devtools::install('C:/Users/Cole/sraplus')
 library(sraplus)
 ## You need to put the file "Return.RData" in the "data" folder of the
 ## package. It's too large to include it and should be removed later. Comes
