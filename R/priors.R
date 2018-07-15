@@ -63,5 +63,10 @@ draw.priors <- function(N, InitialDepletePrior, InitialDepleteCV, Kprior,
     mutate("InitialPrior"=InitialPrior)
   draws <- draws_mvn
   draws$logitbound_h <- draws$ln_var <- NULL
+  if(any(draws_mvn$Sigma > 1.5)){
+    warning(paste(sum(draws_mvn$Sigma > 1.5),
+                  "of Sigma values were truncated to 1.5"))
+    draws_mvn$Sigma[draws_mvn$Sigma > 1.5] <-  1.5
+  }
   return(draws)
 }
