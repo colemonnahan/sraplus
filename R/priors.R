@@ -7,10 +7,13 @@
 #' @param Catch Vector of catch
 #' @param Taxon A named vector with elements "Class, Order, Family, Genus,
 #'   Species". Either provide a name or "" to specify predictive.
+#' @param Kscale Scalar to control the initial biomass which is generated
+#'   as runif(N, Carry/Kscale, Carry*Kscale) where
+#'   Carry=Kprior*max(Catch).
 #' @return A data.frame that contains N random draws from all priors
 #' @export
 draw.priors <- function(N, InitialDepletePrior, InitialDepleteCV, Kprior,
-                        Catch, Taxon){
+                        Catch, Taxon, Kscale=2){
   ## initial depletion prior
   ## Switched to a lognormal prior on intial depletion so that we're not
   ## generating negative starting values for biomass. Assuming that the
@@ -22,7 +25,7 @@ draw.priors <- function(N, InitialDepletePrior, InitialDepleteCV, Kprior,
   ## carrying capacity prior
   ## correlation between maximum catch and MSY
   Carry <- Kprior*Cmax
-  Cprior <- runif(N,min=Carry/2,max=Carry*2)
+  Cprior <- runif(N,min=Carry/Kscale,max=Carry*Kscale)
   ## #######################
   ## priors from FishLife
   ## #######################
