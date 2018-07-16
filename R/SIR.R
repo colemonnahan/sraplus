@@ -122,5 +122,6 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
   return(list(depletion=Dstore[, K], ssb=Bstore[,K],
               U=Ustore[,K], Keepers=K, final=final, umsy=umsy[K],
               cmsy=cmsy[K], uscaled=Uscaledstore[,K],
-              bscaled=Bscaledstore[,K]))
+              bscaled=Bscaledstore[,K], draws=draws, likes=LikeStore,
+              crashed=crashed))
 }
