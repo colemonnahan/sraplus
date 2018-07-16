@@ -3,7 +3,7 @@
 #' and which were kept
 #' @param fit A returned list from run.SIR
 #' @return Nothing. A plot is created.
-#'
+#' @export
 plot_draws <- function(fit){
   n <- nrow(fit$draws)
   col <- rep('black', len=n)
@@ -12,9 +12,15 @@ plot_draws <- function(fit){
   ## want the order to be black red green I think
   col <- factor(col, levels=c('red', 'black', 'green'))
   ind <- order(col)
-  pairs(fit$draws[ind,], col=col[ind], upper.panel=NULL)
+  pairs(fit$draws[ind,], col=col[ind], upper.panel=NULL, pch='.')
 }
 
+#' Plot the realized recruitment deviations from a fit, showing which
+#' crashed the population and which were kept
+#' @param fit A returned list from run.SIR
+#' @return Nothing. A plot is created.
+#' @export
+#'
 plot_recdevs <- function(fit){
   n <- nrow(fit$draws)
   col <- rep('black', len=n)
@@ -27,10 +33,10 @@ plot_recdevs <- function(fit){
   recdevs <- fit$recdevs[ind,]
   years <- 1:ncol(recdevs)
   ylim <- c(-1,1)*1.05*max(abs(recdevs))
-  plot(years,  ylim=ylim, type="n",xlab=NA,
+  plot(years,  ylim=ylim, type="n",xlab=NA, pch='.',
        ylab="Recruitment deviation")
   for(i in 1:nrow(recdevs)){
-    jitter(years, y=recdevs[i,], col=as.character(col[i]))
+    points(jitter(years), y=recdevs[i,], col=as.character(col[i]))
   }
 }
 
