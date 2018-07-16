@@ -126,5 +126,5 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
               U=Ustore[,K], Keepers=K, final=final, umsy=umsy[K],
               cmsy=cmsy[K], uscaled=Uscaledstore[,K],
               bscaled=Bscaledstore[,K], draws=draws, likes=LikeStore,
-              crashed=crashed))
+              crashed=crashed, recdevs=recdevs))
 }
