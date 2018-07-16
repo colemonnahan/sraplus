@@ -1,4 +1,19 @@
 ### Utility functions for package
+#' Plot the prior draws from a fit, showing which crashed the population
+#' and which were kept
+#' @param fit A returned list from run.SIR
+#' @return Nothing. A plot is created.
+#'
+plot_draws <- function(fit){
+  n <- nrow(fit$draws)
+  col <- rep('black', len=n)
+  col[fit$crashed] <- 'red'
+  col[unique(fit$Keepers)] <- 'green'
+  ## want the order to be black red green I think
+  col <- factor(col, levels=c('black', 'red', 'green'))
+  ind <- order(col)
+  pairs(fit$draws[ind,], col=col[ind], upper.panel=NULL)
+}
 
 
 #' Read catch data from file
