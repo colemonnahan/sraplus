@@ -34,7 +34,7 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
   ## maximum age
   maxage <- AgeMax
   ## natural survival
-  surv  <-  1-NatMort
+  surv  <-  exp(-NatMort)
   ## num is numbers at age; vuln is vulnerability
   num <- vuln <- rep(1,maxage)
   ## 100% selectivity option
