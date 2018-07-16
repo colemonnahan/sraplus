@@ -30,7 +30,7 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
   Ustore <- array(dim=c(NY,nrep))
   Bscaledstore <- Uscaledstore <- array(dim=c(NY,nrep))
   LikeStore <- rep(0, len=nrep)
-  umsy <- cmsy <- crashed <- rep(NA, len=nrep)
+  bmsy <- umsy <- cmsy <- crashed <- rep(NA, len=nrep)
   B <- array(dim=(NY+1))  #stock biomass
   ## Recruitment deviations (rows are replicates, columns years)
   recdevs <- matrix(NA, nrow=nrep, ncol=NY)
@@ -89,6 +89,7 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
     Bscaledstore[,irep] <- bscaled
     cmsy[irep] <- out$cmsy
     umsy[irep] <- out$umsy
+    bmsy[irep] <- out$bmsy
     crashed[irep] <- out$crashed
     recdevs[irep,] <- out$devs
   } #end of loop over replicates
@@ -117,14 +118,14 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
   ##   if (Nhits>0) {Keepers[k:(k+Nhits-1)] <-  i; k <- k+Nhits}
   ## }
   K <- get.keepers(Nkeep, CumLike, BreakPoints)
-  print(paste0("# crashed=", sum(crashed),";  % unique draws=",100*length(unique(K))/Nkeep))
+  print(paste0("# crashed=", sum(crashed),";  # unique draws=",length(unique(K))))
   final <- list(deplete.mean=deplete.mean,
                 deplete.cv=deplete.cv, deplete.distribution,
                 harvest.mean=harvest.mean,
                 harvest.sd=harvest.sd, harvest.distribution=harvest.distribution)
   return(list(depletion=Dstore[, K], ssb=Bstore[,K],
               U=Ustore[,K], Keepers=K, final=final, umsy=umsy[K],
-              cmsy=cmsy[K], uscaled=Uscaledstore[,K],
+              cmsy=cmsy[K], bmsy=bmsy[K], uscaled=Uscaledstore[,K],
               bscaled=Bscaledstore[,K], draws=draws, likes=LikeStore,
               crashed=crashed, recdevs=recdevs))
 }
