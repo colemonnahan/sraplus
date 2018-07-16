@@ -10,11 +10,29 @@ plot_draws <- function(fit){
   col[fit$crashed] <- 'red'
   col[unique(fit$Keepers)] <- 'green'
   ## want the order to be black red green I think
-  col <- factor(col, levels=c('black', 'red', 'green'))
+  col <- factor(col, levels=c('red', 'black', 'green'))
   ind <- order(col)
   pairs(fit$draws[ind,], col=col[ind], upper.panel=NULL)
 }
 
+plot_recdevs <- function(fit){
+  n <- nrow(fit$draws)
+  col <- rep('black', len=n)
+  col[fit$crashed] <- 'red'
+  col[unique(fit$Keepers)] <- 'green'
+  ## want the order to be black red green I think
+  col <- factor(col, levels=c('red', 'black', 'green'))
+  ind <- order(col)
+  col <- col[ind]
+  recdevs <- fit$recdevs[ind,]
+  years <- 1:ncol(recdevs)
+  ylim <- c(-1,1)*1.05*max(abs(recdevs))
+  plot(years,  ylim=ylim, type="n",xlab=NA,
+       ylab="Recruitment deviation")
+  for(i in 1:nrow(recdevs)){
+    jitter(years, y=recdevs[i,], col=as.character(col[i]))
+  }
+}
 
 #' Read catch data from file
 #' @param File to do
@@ -26,7 +44,6 @@ ReadCatchData <- function(File){
   DD=list(StockInfo=D[,1:6],CatchData=CatchData)
   return(DD)
 }
-
 
 #' Read in stocks to consider and priors
 #' @param File to do
