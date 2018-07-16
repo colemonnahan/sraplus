@@ -140,7 +140,7 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
     bmsy <- get.equilibrium.catch(fit$maximum, biomass=TRUE)
   }
   out <- list(pop=pop, Vpop=Vpop, hr=hrstore, umsy=fit$maximum, cmsy=fit$objective,
-              bmsy=bmsy, crashed=crashed)
+              bmsy=bmsy, crashed=crashed, devs=devs)
   if(use.sim){
     u.seq <- seq(0,1, len=100)
     c.seq <- sapply(u.seq, function(u) get.equilibrium.catch(u))

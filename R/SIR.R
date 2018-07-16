@@ -32,6 +32,8 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
   LikeStore <- rep(0, len=nrep)
   umsy <- cmsy <- crashed <- rep(NA, len=nrep)
   B <- array(dim=(NY+1))  #stock biomass
+  ## Recruitment deviations (rows are replicates, columns years)
+  recdevs <- matrix(NA, nrow=nrep, ncol=NY)
   ## #########################
   ## run iterations
   ## #########################
@@ -88,6 +90,7 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
     cmsy[irep] <- out$cmsy
     umsy[irep] <- out$umsy
     crashed[irep] <- out$crashed
+    recdevs[irep,] <- out$devs
   } #end of loop over replicates
 
   ## filter keepers
