@@ -116,7 +116,11 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
     ## spwaning biomass per recruit fishing at U
     SBPR <- sum(Weight*mature*num)/rzeroC
     ## recruits in equilibrium fishing at U
-    R <- max(0, (SBPR-alpha)/(betav*SBPR))
+   ## R <- max(0, (SBPR-alpha)/(betav*SBPR))
+    ## We actually want R to be negative if crashed, so that the function
+    ## is continuously differentiable even when crashed. We'll need to
+    ## catch this later if CMSY or BMSY is negative.
+    R <-  (SBPR-alpha)/(betav*SBPR)
     ## and equlibrium catch per recruit?
     Ca <- sum(num*vuln*Weight*U)
     YPR <- Ca/rzeroC
@@ -143,8 +147,8 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
               bmsy=bmsy, crashed=crashed, devs=devs)
   if(use.sim){
     u.seq <- seq(0,1, len=100)
-    c.seq <- sapply(u.seq, function(u) get.equilibrium.catch(u))
-    b.seq <- sapply(u.seq, function(u) get.equilibrium.catch(u, biomass=TRUE))
+    c.seq <- sapply(u.seq, function(u) max(0,get.equilibrium.catch(u)))
+    b.seq <- sapply(u.seq, function(u) max(0,get.equilibrium.catch(u, biomass=TRUE)))
     o <- list(num0=num0, num=num, Catch=Catch, Vpop=Vpop,
               CatchEquilibrium=get.equilibrium.catch(simulation$FishMort),
               BiomassEquilibrium=get.equilibrium.catch(simulation$FishMort, TRUE),
