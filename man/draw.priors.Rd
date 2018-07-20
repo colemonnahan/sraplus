@@ -4,7 +4,8 @@
 \alias{draw.priors}
 \title{Quick function to return priors for the Mexican examples.}
 \usage{
-draw.priors(N, InitialDepletePrior, InitialDepleteCV, Kprior, Catch, Taxon)
+draw.priors(N, InitialDepletePrior, InitialDepleteCV, Kprior, Catch, Taxon,
+  Kscale = 2)
 }
 \arguments{
 \item{N}{Number of draws}
@@ -19,6 +20,10 @@ draw.priors(N, InitialDepletePrior, InitialDepleteCV, Kprior, Catch, Taxon)
 
 \item{Taxon}{A named vector with elements "Class, Order, Family, Genus,
 Species". Either provide a name or "" to specify predictive.}
+
+\item{Kscale}{Scalar to control the initial biomass which is generated
+as runif(N, Carry/Kscale, Carry*Kscale) where
+Carry=Kprior*max(Catch).}
 }
 \value{
 A data.frame that contains N random draws from all priors
