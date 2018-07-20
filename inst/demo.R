@@ -28,13 +28,8 @@ fit <- run.SIR(Catch=Catch, draws=draws, deplete.mean=2,
 
 ## Quick plot to show the output
 par(mfrow=c(3,1))
-Years <- 2005:2015
-plot(Years,Years, ylim= c(0,1.05*max(fit$ssb)), type="n",xlab=NA,
-     ylab="Vulnerable Biomass",main='Fake Tuna')
-trash <- apply(fit$ssb, 2, function(i) lines(Years,y=i, col=rgb(0,0,0,.1)))
-plot(Years, Years, ylim=c(0,4),type="n",xlab=NA,
-     ylab="B/BMSY")
-trash <- apply(fit$bscaled, 2, function(i) lines(Years,y=i, col=rgb(0,0,0,.1)))
-plot(Years,Years, ylim=c(0,2), type="n",xlab="Year",
-     ylab="U/UMSY")
-trash <- apply(fit$uscaled, 2, function(i) lines(Years,y=i, col=rgb(0,0,0,.1)))
+fit$years <- 2005:2015
+plot_ssb(fit)
+plot_bstatus(fit)
+plot_ustatus(fit)
+
