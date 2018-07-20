@@ -1,5 +1,45 @@
 ### Utility functions for package
 
+#' Plot B/BMSY (biomass status) time series for posterior draws, with
+#'   terminal year penalty shown if used.
+#' @template plot_args
+#' @param ylim The ylim to use, if not specified will be calculated
+#'   internally.
+#' @export
+plot_bstatus <- function(fit, ylim=NULL){
+  if(is.null(fit$year)) fit$year <- 1:nrow(fit$bscaled)
+  if(is.null(ylim)) ylim <- c(0, 1.05*max(fit$bscaled))
+  plot(x=fit$year, y=fit$year, ylim=ylim, type="n",xlab='Year',
+       ylab="B/BMSY")
+  trash <- apply(fit$bscaled, 2, function(i)
+    lines(x=fit$year, y=i, col=rgb(0,0,0,.1)))
+  ci <- qnorm(c(0.025, .975), mean=fit$final$deplete.mean, fit$final$deplete.cv)
+  lines(x=rep(tail(fit$year,1),2), ci, col=2, lwd=2)
+  points(x=tail(fit$year,1), y=fit$final$deplete.mean, col=2, cex=1.5,
+         pch=16)
+  abline(h=1, col='red', lty=3, lwd=2)
+}
+
+#' Plot U/UMSY (exploitation status) time series for posterior draws, with
+#'   terminal year penalty shown if used.
+#' @template plot_args
+#' @param ylim The ylim to use, if not specified will be calculated
+#'   internally.
+#' @export
+plot_ustatus <- function(fit, ylim=NULL){
+  if(is.null(fit$year)) fit$year <- 1:nrow(fit$uscaled)
+  if(is.null(ylim)) ylim <- c(0, 1.05*max(fit$uscaled))
+  plot(x=fit$year, y=fit$year, ylim=ylim, type="n",xlab='Year',
+       ylab="U/UMSY")
+  trash <- apply(fit$uscaled, 2, function(i) lines(fit$year,y=i, col=rgb(0,0,0,.1)))
+  ci <- qnorm(c(0.025, .975), mean=fit$final$deplete.mean, fit$final$deplete.cv)
+  lines(x=rep(tail(fit$year,1),2), ci, col=2, lwd=2)
+  points(x=tail(fit$year,1), y=fit$final$deplete.mean, col=2, cex=1.5,
+         pch=16)
+  abline(h=1, col='red', lty=3, lwd=2)
+}
+
+
 #' Plot spawning biomass time series for posterior draws with catches.
 #' @template plot_args
 #' @param ylim The ylim to use, if not specified will be calculated
