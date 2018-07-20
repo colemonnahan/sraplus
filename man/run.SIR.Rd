@@ -32,6 +32,10 @@ penalty on fishing pressure. If either is NULL it is ignored.}
 
 \item{ProcessError}{Flag for whether to include process error
 deviations, passed on to model. Defaults to TRUE.}
+
+\item{penalties}{A list specifying the penalties to use.}
+
+\item{simulation}{See documentation for AgeModel.}
 }
 \value{
 A list containing depletion, SSB, and harvest rate (U) for

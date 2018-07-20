@@ -17,4 +17,8 @@
 #' @name sraplus
 #' @importFrom stats dnorm rlnorm rnorm runif
 #' @importFrom utils read.csv
+#' @importFrom grDevices rgb
+#' @importFrom graphics abline lines pairs plot points
+#' @importFrom stats optimize qnorm
+#' @importFrom utils tail
 NULL

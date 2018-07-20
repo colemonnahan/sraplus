@@ -11,6 +11,10 @@
 #' @param Sigma Process error variance, i.e. N(0,Sigma).
 #' @param ProcessError A flag for whether to include process error,
 #'   defaults to TRUE.
+#' @param simulation A list with elements 'NYears' and 'FishMort'. If
+#'   supplied the model will run a simulation under that level of U. It it
+#'   designed to be used to test equilibrium conditions but can be expanded
+#'   later for more expansive simulation testing.
 #' @export
 AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
                      Carry, Weight, InitialDeplete, Sigma,

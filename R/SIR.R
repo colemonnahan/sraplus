@@ -13,6 +13,8 @@
 #' @param Catch Vector of catches, one for each year.
 #' @param ProcessError Flag for whether to include process error
 #'   deviations, passed on to model. Defaults to TRUE.
+#' @param penalties A list specifying the penalties to use.
+#' @param simulation See documentation for AgeModel.
 #' @return A list containing depletion, SSB, and harvest rate (U) for
 #'   posterior draws, and a vector of Keepers
 #'
