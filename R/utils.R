@@ -1,5 +1,21 @@
 ### Utility functions for package
 
+#' Plot posterior histograms of MSY reference points and the log posterior
+#' density
+#'
+#' @template plot_args
+#' @export
+plot_reference <- function(fit){
+  old.par <- par(no.readonly=TRUE)
+  on.exit(par(old.par))
+  par(mfrow=c(2,2), mgp=c(1.1, .3, 0), tck=-.02, mar=c(2.5,2.5,.5,.5))
+  hist(log(fit$likes[fit$likes>0]), main=NA, xlab="log-posterior", ylab=NA)
+  hist(fit$bmsy, main=NA, xlab="BMSY", ylab=NA, )
+  hist(fit$umsy, main=NA, xlab="UMSY", ylab=NA)
+  hist(fit$cmsy, main=NA, xlab="MSY", xlim=c(0,1), ylab=NA)
+}
+
+
 #' Plot B/BMSY (biomass status) time series for posterior draws, with
 #'   terminal year penalty shown if used.
 #' @template plot_args

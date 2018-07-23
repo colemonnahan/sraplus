@@ -32,4 +32,5 @@ fit$years <- 2005:2015
 plot_ssb(fit)
 plot_bstatus(fit)
 plot_ustatus(fit)
-
+## plots of MSY reference points and NLL
+plot_reference(fit)
