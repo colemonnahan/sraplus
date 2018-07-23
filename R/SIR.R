@@ -121,13 +121,13 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
   ## }
   K <- get.keepers(Nkeep, CumLike, BreakPoints)
   print(paste0("# crashed=", sum(crashed),";  # unique draws=",length(unique(K))))
-  final <- list(deplete.mean=deplete.mean,
+  penalties <- list(deplete.mean=deplete.mean,
                 deplete.cv=deplete.cv, deplete.distribution,
                 harvest.mean=harvest.mean,
                 harvest.sd=harvest.sd, harvest.distribution=harvest.distribution)
-  return(list(depletion=Dstore[, K], ssb=Bstore[,K],
-              U=Ustore[,K], Keepers=K, final=final, umsy=umsy[K],
-              cmsy=cmsy[K], bmsy=bmsy[K], uscaled=Uscaledstore[,K],
-              bscaled=Bscaledstore[,K], draws=draws, likes=LikeStore,
-              crashed=crashed, recdevs=recdevs, Catch=Catch))
+  return(list(ssb=Bstore[,K], U=Ustore[,K], depletion=Dstore[,K],
+              umsy=umsy[K], cmsy=cmsy[K], bmsy=bmsy[K], uscaled=Uscaledstore[,K],
+              bscaled=Bscaledstore[,K], recdevs=recdevs, penalties=penalties,
+              Keepers=K, crashed=crashed, likes=LikeStore, Catch=Catch,
+              draws=draws))
 }

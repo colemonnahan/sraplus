@@ -29,9 +29,9 @@ plot_bstatus <- function(fit, ylim=NULL){
        ylab="B/BMSY")
   trash <- apply(fit$bscaled, 2, function(i)
     lines(x=fit$year, y=i, col=rgb(0,0,0,.1)))
-  ci <- qnorm(c(0.025, .975), mean=fit$final$deplete.mean, fit$final$deplete.cv)
+  ci <- qnorm(c(0.025, .975), mean=fit$penalties$deplete.mean, fit$penalties$deplete.cv)
   lines(x=rep(tail(fit$year,1),2), ci, col=2, lwd=2)
-  points(x=tail(fit$year,1), y=fit$final$deplete.mean, col=2, cex=1.5,
+  points(x=tail(fit$year,1), y=fit$penalties$deplete.mean, col=2, cex=1.5,
          pch=16)
   abline(h=1, col='red', lty=3, lwd=2)
 }
@@ -48,9 +48,9 @@ plot_ustatus <- function(fit, ylim=NULL){
   plot(x=fit$year, y=fit$year, ylim=ylim, type="n",xlab='Year',
        ylab="U/UMSY")
   trash <- apply(fit$uscaled, 2, function(i) lines(fit$year,y=i, col=rgb(0,0,0,.1)))
-  ci <- qnorm(c(0.025, .975), mean=fit$final$deplete.mean, fit$final$deplete.cv)
+  ci <- qnorm(c(0.025, .975), mean=fit$penalties$deplete.mean, fit$penalties$deplete.cv)
   lines(x=rep(tail(fit$year,1),2), ci, col=2, lwd=2)
-  points(x=tail(fit$year,1), y=fit$final$deplete.mean, col=2, cex=1.5,
+  points(x=tail(fit$year,1), y=fit$penalties$deplete.mean, col=2, cex=1.5,
          pch=16)
   abline(h=1, col='red', lty=3, lwd=2)
 }
