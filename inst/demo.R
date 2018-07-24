@@ -20,7 +20,8 @@ Taxon <- c(Class="Actinopterygii", Order="Perciformes",
            Family="Scombridae", Genus="Thunnus", Species="albacares")
 ## Run SIR to get posterior samples
 fit <- run.SIR(nrep=nrep, Catch=Catch, Taxon=Taxon, InitialDepletePrior=.8,
-               InitialDepleteCV=1, deplete.mean=2, deplete.cv=0.5)
+               InitialDepleteCV=1, deplete.mean=2, deplete.cv=0.5,
+               AgeVulnOffset=-1)
 
 ## Quick plot to show the output
 par(mfrow=c(3,1))

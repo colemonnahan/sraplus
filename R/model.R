@@ -8,6 +8,8 @@
 #' @param Weight Vector of weights at age, calculated from growth
 #'   parameters a and b.
 #' @param InitialDeplete Initial level of depletion.
+#' @param AgeVulnOffset Optional parameter for specifying age at
+#'   vulnerability, defaulting to AgeMat-1. See ?run.SIR for more info.
 #' @param Sigma Process error variance, i.e. N(0,Sigma).
 #' @param ProcessError A flag for whether to include process error,
 #'   defaults to TRUE.
@@ -18,8 +20,11 @@
 #' @export
 AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
                      Carry, Weight, InitialDeplete, Sigma,
+                     AgeVulnOffset=-1,
                      ProcessError=TRUE, simulation=NULL){
   stopifnot(AgeMat>0)
+  AgeVuln <- AgeMat + AgeVulnOffset
+  stopifnot(AgeVuln>0); stopifnot(AgeVuln<AgeMax)
   use.sim <- !is.null(simulation)
   if(use.sim){
     stopifnot(is.numeric(simulation$FishMort))
@@ -44,7 +49,7 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
   ## 100% selectivity option
   if(AgeMat>1){
     ## assume knife edge selectivity
-    vuln[1:(AgeMat-1)] <- 0
+    vuln[1:(AgeVuln)] <- 0
   }
   ## assume logistic maturity with 50% at AgeMat
   mature  <-  1 / (1 + exp(AgeMat - 1:AgeMax))

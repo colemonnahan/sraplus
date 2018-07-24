@@ -11,25 +11,33 @@
 #' @param deplete.cv Final year CV, used as SD
 #' @param deplete.distribution The likelhiood to use, either (1) normal or
 #'   (2) lognormal
-#' @param pct.keep The percentage of "keepers" from the total. Default 10\%.
-#' @param harvest.sd The mean and SD of the terminal year
-#'   penalty on fishing pressure. If either is NULL it is ignored.
+#' @param pct.keep The percentage of "keepers" from the total. Default
+#'   10\%.
+#' @param harvest.sd The mean and SD of the terminal year penalty on
+#'   fishing pressure. If either is NULL it is ignored.
 #' @param harvest.mean Same as harvest.sd but the mean.
 #' @param harvest.distribution Same choice as deplete.distribution.
 #' @param ProcessError Flag for whether to include process error
 #'   deviations, passed on to model. Defaults to TRUE.
 #' @param penalties A list specifying the penalties to use.
 #' @param simulation See documentation for AgeModel.
+#' @param AgeVulnOffset Optional parameter for offset of age of
+#'   vulnerability from age of maturity. A value of 0 means knife edge
+#'   selectivity starts at 50% maturity (AgeMat), while -1 means 1 year
+#'   before it. Thus (age of vulnerability = age of maturity +
+#'   AgeVulnOffset). Defaults -1. Note that AgeMat is stochastic inside the
+#'   function, so age at vulnerability will vary with it.
 #' @return A list containing depletion, SSB, and harvest rate (U) for
 #'   posterior draws, and a vector of Keepers
-#'
 #' @export
 #'
 run.SIR <- function(nrep, Catch, Taxon, InitialDepletePrior,
-                    InitialDepleteCV, Kprior=3, deplete.mean=NULL, deplete.cv=NULL,
+                    InitialDepleteCV, Kprior=3, deplete.mean=NULL,
+                    deplete.cv=NULL,
                     deplete.distribution=1, harvest.distribution=1,
-                    harvest.mean=NULL, harvest.sd=NULL, pct.keep=10,
-                    ProcessError=TRUE, penalties=NULL, simulation=NULL){
+                    harvest.mean=NULL, harvest.sd=NULL,
+                    AgeVulnOffset=-1,
+                    pct.keep=10, ProcessError=TRUE, penalties=NULL, simulation=NULL){
   NY <- length(Catch)
   Bstore <- array(dim=c(NY,nrep))
   Dstore <- array(dim=c(NY,nrep))
@@ -68,7 +76,8 @@ run.SIR <- function(nrep, Catch, Taxon, InitialDepletePrior,
     Length <- Linf*(1-exp(-vbk*ages))
     Weight <- lwa * Length ^ lwb
     out <- AgeModel(Catch, AgeMat, Steep,NatMort, AgeMax, Carry,
-                    Weight,InitialDeplete,Sigma, ProcessError=ProcessError,
+                    Weight,InitialDeplete,Sigma, AgeVulnOffset=AgeVulnOffset,
+                    ProcessError=ProcessError,
                     simulation=simulation)
     pop <- out$pop
     ## plot(Years,pop,type="l",ylim=c(0,max(pop)))
