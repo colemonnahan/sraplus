@@ -1,17 +1,16 @@
 
-#' Quick function to return priors for the Mexican examples.
+#' Draw samples from the prior distribution as defined by biological
+#'   parameters from FishLife and initial depletion distribution.
 #' @param N Number of draws
 #' @param InitialDepletePrior Mean of initial lognormal depletion penalty
 #' @param InitialDepleteCV CV of intial lognormal depletion penalty
 #' @param Kprior Maybe a multiplier on K?
 #' @param Catch Vector of catch
-#' @param Taxon A named vector with elements "Class, Order, Family, Genus,
-#'   Species". Either provide a name or "" to specify predictive.
 #' @param Kscale Scalar to control the initial biomass which is generated
-#'   as runif(N, Carry/Kscale, Carry*Kscale) where
-#'   Carry=Kprior*max(Catch).
-#' @return A data.frame that contains N random draws from all priors
-#' @export
+#'   as runif(N, Carry/Kscale, Carry*Kscale) where Carry=Kprior*max(Catch).
+#' @return A list that contains 'draws', a data.frame with N random draws from all
+#'   priors, and 'Taxon' which is a character string that is returned from
+#'   the FishLife query match.
 draw.priors <- function(N, InitialDepletePrior, InitialDepleteCV, Kprior,
                         Catch, Taxon, Kscale=2){
   ## initial depletion prior
@@ -76,5 +75,5 @@ draw.priors <- function(N, InitialDepletePrior, InitialDepleteCV, Kprior,
                   "of M values were truncated to 3"))
     draws$M[draws$M > 5] <-  5
   }
-  return(draws)
+  return(list(draws=draws, Taxon=sp[1]))
 }

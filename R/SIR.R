@@ -1,6 +1,12 @@
 #' Run the SIR algorithm for a draws and stock (temporary)
 #'
-#' @param draws data.frame of prior draws for SIR
+#' @param nrep Number of replicates to run.
+#' @param Catch Vector of catches, one for each year.
+#' @param Taxon A list with taxonomic information, including 'Class',
+#'   'Order', 'Family', 'Genus', 'Species'. Any blanks will be converted to
+#'   'predictive' internally when querying FishLife.
+#' @param InitialDepletePrior Initial depletion mean
+#' @param InitialDepleteCV Initial depletion CV
 #' @param deplete.mean Final year depletion (not in log space)
 #' @param deplete.cv Final year CV, used as SD
 #' @param deplete.distribution The likelhiood to use, either (1) normal or
@@ -10,7 +16,6 @@
 #'   penalty on fishing pressure. If either is NULL it is ignored.
 #' @param harvest.mean Same as harvest.sd but the mean.
 #' @param harvest.distribution Same choice as deplete.distribution.
-#' @param Catch Vector of catches, one for each year.
 #' @param ProcessError Flag for whether to include process error
 #'   deviations, passed on to model. Defaults to TRUE.
 #' @param penalties A list specifying the penalties to use.
@@ -20,12 +25,11 @@
 #'
 #' @export
 #'
-run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
+run.SIR <- function(nrep, Catch, Taxon, InitialDepletePrior,
+                    InitialDepleteCV, Kprior=3, deplete.mean=NULL, deplete.cv=NULL,
                     deplete.distribution=1, harvest.distribution=1,
                     harvest.mean=NULL, harvest.sd=NULL, pct.keep=10,
                     ProcessError=TRUE, penalties=NULL, simulation=NULL){
-  ## store results
-  nrep <- nrow(draws)
   NY <- length(Catch)
   Bstore <- array(dim=c(NY,nrep))
   Dstore <- array(dim=c(NY,nrep))
@@ -39,7 +43,11 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
   ## #########################
   ## run iterations
   ## #########################
-  draws <- as.matrix(draws) # less overhead than data.frame for subsetting
+  ## Draw from priors for SIR
+  priors <- draw.priors(N=nrep, InitialDepletePrior=InitialDepletePrior,
+                       InitialDepleteCV=InitialDepleteCV,
+                       Kprior=Kprior, Catch=Catch, Taxon=Taxon)
+  draws <- priors$draws
   for (irep in 1:nrep){   ##loop over replicates
     ## set priors
     InitialDeplete <- draws[irep, 'InitialPrior']
@@ -129,5 +137,5 @@ run.SIR <- function(Catch, draws, deplete.mean=NULL, deplete.cv=NULL,
               umsy=umsy[K], cmsy=cmsy[K], bmsy=bmsy[K], uscaled=Uscaledstore[,K],
               bscaled=Bscaledstore[,K], recdevs=recdevs, penalties=penalties,
               Keepers=K, crashed=crashed, likes=LikeStore, Catch=Catch,
-              draws=draws))
+              draws=draws, Taxon=priors$Taxon))
 }
