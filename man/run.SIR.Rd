@@ -4,15 +4,24 @@
 \alias{run.SIR}
 \title{Run the SIR algorithm for a draws and stock (temporary)}
 \usage{
-run.SIR(Catch, draws, deplete.mean = NULL, deplete.cv = NULL,
-  deplete.distribution = 1, harvest.distribution = 1, harvest.mean = NULL,
-  harvest.sd = NULL, pct.keep = 10, ProcessError = TRUE,
-  penalties = NULL, simulation = NULL)
+run.SIR(nrep, Catch, Taxon, InitialDepletePrior, InitialDepleteCV, Kprior = 3,
+  deplete.mean = NULL, deplete.cv = NULL, deplete.distribution = 1,
+  harvest.distribution = 1, harvest.mean = NULL, harvest.sd = NULL,
+  pct.keep = 10, ProcessError = TRUE, penalties = NULL,
+  simulation = NULL)
 }
 \arguments{
+\item{nrep}{Number of replicates to run.}
+
 \item{Catch}{Vector of catches, one for each year.}
 
-\item{draws}{data.frame of prior draws for SIR}
+\item{Taxon}{A list with taxonomic information, including 'Class',
+'Order', 'Family', 'Genus', 'Species'. Any blanks will be converted to
+'predictive' internally when querying FishLife.}
+
+\item{InitialDepletePrior}{Initial depletion mean}
+
+\item{InitialDepleteCV}{Initial depletion CV}
 
 \item{deplete.mean}{Final year depletion (not in log space)}
 

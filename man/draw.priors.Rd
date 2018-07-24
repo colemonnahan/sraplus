@@ -2,7 +2,8 @@
 % Please edit documentation in R/priors.R
 \name{draw.priors}
 \alias{draw.priors}
-\title{Quick function to return priors for the Mexican examples.}
+\title{Draw samples from the prior distribution as defined by biological
+  parameters from FishLife and initial depletion distribution.}
 \usage{
 draw.priors(N, InitialDepletePrior, InitialDepleteCV, Kprior, Catch, Taxon,
   Kscale = 2)
@@ -18,16 +19,15 @@ draw.priors(N, InitialDepletePrior, InitialDepleteCV, Kprior, Catch, Taxon,
 
 \item{Catch}{Vector of catch}
 
-\item{Taxon}{A named vector with elements "Class, Order, Family, Genus,
-Species". Either provide a name or "" to specify predictive.}
-
 \item{Kscale}{Scalar to control the initial biomass which is generated
-as runif(N, Carry/Kscale, Carry*Kscale) where
-Carry=Kprior*max(Catch).}
+as runif(N, Carry/Kscale, Carry*Kscale) where Carry=Kprior*max(Catch).}
 }
 \value{
-A data.frame that contains N random draws from all priors
+A list that contains 'draws', a data.frame with N random draws from all
+  priors, and 'Taxon' which is a character string that is returned from
+  the FishLife query match.
 }
 \description{
-Quick function to return priors for the Mexican examples.
+Draw samples from the prior distribution as defined by biological
+  parameters from FishLife and initial depletion distribution.
 }
