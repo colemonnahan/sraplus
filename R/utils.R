@@ -1,5 +1,66 @@
 ### Utility functions for package
 
+#' Plot terminal year U/UMSY and B/BMSY posteriors and priors (if
+#' applicable) for a series of fits
+#' @param ... A series of fits as returned by run.SIR
+#' @param names An optional character string with length equal to the
+#' number of fits, used to identify fits on the plot.
+#' @param plot Boolean for whether to print the plot.
+#' @param xlim Optional xlim to override the defaults chosen by ggplot
+#' @param q Optional quantiles between which to calculate prior
+#' density. Defaults to c(0.005,0.995), that is 99\%.
+#' @return An invisible ggplot2 object which can be printed or saved.
+#' @export
+plot_terminal <- function(..., names=NULL, plot=TRUE, xlim=NULL, q=c(0.005, 0.995)){
+  fits <- list(...)
+  if(is.null(names)) names <- paste0('fit',1:length(fits))
+  stopifnot(length(names) == length(fits))
+  stopifnot(plot %in% c(TRUE, FALSE))
+  bscaled <- uscaled <- list()
+  pru <- prb <- list()
+  for(i in 1:length(fits)){
+    ## get posteriors
+    uscaled[[i]] <- data.frame(fit=names[i], status=fits[[i]]$uscaled[length(fits[[i]]$year),])
+    bscaled[[i]] <- data.frame(fit=names[i], status=fits[[i]]$bscaled[length(fits[[i]]$year),])
+    ## Get the prior for B/BMSY
+    mean <- fits[[i]]$penalties$deplete.mean
+    std <- fits[[i]]$penalties$deplete.cv
+    if(!is.null(mean)){
+      bb <- seq(qnorm(q[1], mean=mean, sd=std),
+                to=qnorm(q[2], mean=mean, sd=std), len=500)
+      prb[[i]] <- data.frame(fit=names[i], metric='B/BMSY', status=bb,
+                             height=dnorm(bb, mean, std))
+    }
+    ## Same for U/UMSY
+    mean <- fits[[i]]$penalties$harvest.mean
+    std <- fits[[i]]$penalties$harvest.sd
+    if(!is.null(mean)){
+      uu <- seq(qnorm(q[1], mean=mean, sd=std),
+                to=qnorm(q[2], mean=mean, sd=std), len=500)
+      pru[[i]] <- data.frame(fit=names[i], metric='U/UMSY', status=uu,
+                             height=dnorm(uu, mean, std))
+    }
+  }
+  uscaled <- data.frame(metric='U/UMSY', do.call(rbind, uscaled))
+  bscaled <- data.frame(metric='B/BMSY', do.call(rbind, bscaled))
+  post <- rbind(uscaled, bscaled)
+  prior <- rbind(do.call(rbind, prb), do.call(rbind, pru))
+  post$fit <- factor(post$fit, levels=names)
+  prior$fit <- factor(prior$fit, levels=names)
+  prior <- prior[prior$status >= 0,]
+  ## Creat ggplot item using the post and prior data sets
+  alpha <- 1/length(fits)
+  g <- ggplot() +
+    geom_histogram(data=post, aes(status, y=..density.., fill=fit),
+                   position='identity', alpha=alpha, bins=30) +
+    geom_line(data=prior, aes(x=status, y=height, color=fit), lwd=2, alpha=alpha) +
+    facet_wrap('metric', scales='free') + geom_vline(xintercept=1, col='red', lty=2)
+  if(!is.null(xlim)) g <- g + xlim(xlim)
+  ## plot and return
+  if(plot) print(g)
+  return(invisible(g))
+}
+
 #' Plot posterior histograms of MSY reference points and the log posterior
 #' density
 #'

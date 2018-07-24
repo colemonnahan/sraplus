@@ -5,6 +5,7 @@ library(mvtnorm)
 library(dplyr)
  devtools::install('C:/Users/Cole/sraplus')
 library(sraplus)
+library(ggplot2)
 ## You need to put the file "Return.RData" in the "data" folder of the
 ## package. It's too large to include it and should be removed later. Comes
 ## from FishLife
@@ -21,6 +22,7 @@ Taxon <- c(Class="Actinopterygii", Order="Perciformes",
 ## Run SIR to get posterior samples
 fit <- run.SIR(nrep=nrep, Catch=Catch, Taxon=Taxon, InitialDepletePrior=.8,
                InitialDepleteCV=1, deplete.mean=2, deplete.cv=0.5,
+               harvest.mean=0.5, harvest.sd=0.5,
                AgeVulnOffset=-2, years=2005:2015)
 
 ## Quick time series plots
@@ -34,3 +36,12 @@ plot_reference(fit)
 
 ## Look at biological prior vs posterior patterns
 plot_draws(fit)
+
+## Run a second fit and compare the differences
+fit2 <- run.SIR(nrep=nrep, Catch=Catch, Taxon=Taxon, InitialDepletePrior=.8,
+                InitialDepleteCV=1, deplete.mean=1.5, deplete.cv=0.3,
+                harvest.mean=0.5, harvest.sd=0.1,
+               AgeVulnOffset=-2)
+
+plot_terminal(fit, fit2)
+
