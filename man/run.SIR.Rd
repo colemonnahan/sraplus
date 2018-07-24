@@ -7,8 +7,8 @@
 run.SIR(nrep, Catch, Taxon, InitialDepletePrior, InitialDepleteCV, Kprior = 3,
   deplete.mean = NULL, deplete.cv = NULL, deplete.distribution = 1,
   harvest.distribution = 1, harvest.mean = NULL, harvest.sd = NULL,
-  pct.keep = 10, ProcessError = TRUE, penalties = NULL,
-  simulation = NULL)
+  AgeVulnOffset = -1, years = NULL, pct.keep = 10, ProcessError = TRUE,
+  penalties = NULL, simulation = NULL)
 }
 \arguments{
 \item{nrep}{Number of replicates to run.}
@@ -34,10 +34,21 @@ run.SIR(nrep, Catch, Taxon, InitialDepletePrior, InitialDepleteCV, Kprior = 3,
 
 \item{harvest.mean}{Same as harvest.sd but the mean.}
 
-\item{harvest.sd}{The mean and SD of the terminal year
-penalty on fishing pressure. If either is NULL it is ignored.}
+\item{harvest.sd}{The mean and SD of the terminal year penalty on
+fishing pressure. If either is NULL it is ignored.}
 
-\item{pct.keep}{The percentage of "keepers" from the total. Default 10\%.}
+\item{AgeVulnOffset}{Optional parameter for offset of age of
+vulnerability from age of maturity. A value of 0 means knife edge
+selectivity starts at 50% maturity (AgeMat), while -1 means 1 year
+before it. Thus (age of vulnerability = age of maturity +
+AgeVulnOffset). Defaults -1. Note that AgeMat is stochastic inside the
+function, so age at vulnerability will vary with it.}
+
+\item{years}{Optional vector of years which is used by plotting
+functions. Defaults to 1:length(Catch).}
+
+\item{pct.keep}{The percentage of "keepers" from the total. Default
+10\%.}
 
 \item{ProcessError}{Flag for whether to include process error
 deviations, passed on to model. Defaults to TRUE.}

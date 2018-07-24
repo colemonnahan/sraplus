@@ -5,7 +5,7 @@
 \title{Stochastic SRA to calculate the trajectory given parameters}
 \usage{
 AgeModel(Catch, AgeMat, Steep, NatMort, AgeMax, Carry, Weight, InitialDeplete,
-  Sigma, ProcessError = TRUE, simulation = NULL)
+  Sigma, AgeVulnOffset = -1, ProcessError = TRUE, simulation = NULL)
 }
 \arguments{
 \item{Catch}{To do}
@@ -26,6 +26,9 @@ parameters a and b.}
 \item{InitialDeplete}{Initial level of depletion.}
 
 \item{Sigma}{Process error variance, i.e. N(0,Sigma).}
+
+\item{AgeVulnOffset}{Optional parameter for specifying age at
+vulnerability, defaulting to AgeMat-1. See ?run.SIR for more info.}
 
 \item{ProcessError}{A flag for whether to include process error,
 defaults to TRUE.}
