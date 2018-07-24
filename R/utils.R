@@ -13,6 +13,8 @@
 #' @export
 plot_terminal <- function(..., names=NULL, plot=TRUE, xlim=NULL, q=c(0.005, 0.995)){
   fits <- list(...)
+  if(!all(unlist(lapply(fits, is.srafit))))
+    stop("Some arguments passed are not of class srafit")
   if(is.null(names)) names <- paste0('fit',1:length(fits))
   stopifnot(length(names) == length(fits))
   stopifnot(plot %in% c(TRUE, FALSE))
@@ -67,6 +69,7 @@ plot_terminal <- function(..., names=NULL, plot=TRUE, xlim=NULL, q=c(0.005, 0.99
 #' @template plot_args
 #' @export
 plot_reference <- function(fit){
+  stopifnot(is.srafit(fit))
   old.par <- par(no.readonly=TRUE)
   on.exit(par(old.par))
   par(mfrow=c(2,2), mgp=c(1.1, .3, 0), tck=-.02, mar=c(2.5,2.5,.5,.5))
@@ -84,6 +87,7 @@ plot_reference <- function(fit){
 #'   internally.
 #' @export
 plot_bstatus <- function(fit, ylim=NULL){
+  stopifnot(is.srafit(fit))
   if(is.null(fit$year)) fit$year <- 1:nrow(fit$bscaled)
   if(is.null(ylim)) ylim <- c(0, 1.05*max(fit$bscaled))
   plot(x=fit$year, y=fit$year, ylim=ylim, type="n",xlab='Year',
@@ -104,6 +108,7 @@ plot_bstatus <- function(fit, ylim=NULL){
 #'   internally.
 #' @export
 plot_ustatus <- function(fit, ylim=NULL){
+  stopifnot(is.srafit(fit))
   if(is.null(fit$year)) fit$year <- 1:nrow(fit$uscaled)
   if(is.null(ylim)) ylim <- c(0, 1.05*max(fit$uscaled))
   plot(x=fit$year, y=fit$year, ylim=ylim, type="n",xlab='Year',
@@ -123,6 +128,7 @@ plot_ustatus <- function(fit, ylim=NULL){
 #'   internally.
 #' @export
 plot_ssb <- function(fit, ylim=NULL){
+  stopifnot(is.srafit(fit))
   if(is.null(fit$year)) fit$year <- 1:nrow(fit$ssb)
   if(is.null(ylim)) ylim <- c(0, 1.05*max(fit$ssb))
   plot(x=fit$year, y=fit$year, ylim=ylim, type="n",xlab='Year',
@@ -139,6 +145,7 @@ plot_ssb <- function(fit, ylim=NULL){
 #' @template plot_args
 #' @export
 plot_draws <- function(fit){
+  stopifnot(is.srafit(fit))
   n <- nrow(fit$draws)
   col <- rep('black', len=n)
   col[fit$crashed] <- 'red'
@@ -154,6 +161,7 @@ plot_draws <- function(fit){
 #' @template plot_args
 #' @export
 plot_recdevs <- function(fit){
+  stopifnot(is.srafit(fit))
   n <- nrow(fit$draws)
   col <- rep('black', len=n)
   col[fit$crashed] <- 'red'

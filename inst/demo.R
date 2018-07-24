@@ -43,5 +43,10 @@ fit2 <- run.SIR(nrep=nrep, Catch=Catch, Taxon=Taxon, InitialDepletePrior=.8,
                 harvest.mean=0.5, harvest.sd=0.1,
                AgeVulnOffset=-2)
 
+## Compare two distinct fits (or more)
 plot_terminal(fit, fit2)
 
+## The return is an object of class 'srafit'
+class(fit)
+print(fit)
+summary(fit)

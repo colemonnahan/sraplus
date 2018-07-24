@@ -146,9 +146,11 @@ run.SIR <- function(nrep, Catch, Taxon, InitialDepletePrior,
                 deplete.cv=deplete.cv, deplete.distribution,
                 harvest.mean=harvest.mean,
                 harvest.sd=harvest.sd, harvest.distribution=harvest.distribution)
-  return(list(years=years, ssb=Bstore[,K], U=Ustore[,K], depletion=Dstore[,K],
+  fit <- list(years=years, ssb=Bstore[,K], U=Ustore[,K], depletion=Dstore[,K],
               umsy=umsy[K], cmsy=cmsy[K], bmsy=bmsy[K], uscaled=Uscaledstore[,K],
               bscaled=Bscaledstore[,K], recdevs=recdevs, penalties=penalties,
               Keepers=K, crashed=crashed, likes=LikeStore, Catch=Catch,
-              draws=draws, Taxon=priors$Taxon))
+              draws=draws, Taxon=priors$Taxon)
+  fit <- construct_srafit(fit)
+  return(invisible(fit))
 }
