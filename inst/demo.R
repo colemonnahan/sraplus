@@ -3,7 +3,7 @@
 library(FishLife)
 library(mvtnorm)
 library(dplyr)
-devtools::install('C:/Users/Cole/sraplus')
+ devtools::install('C:/Users/Cole/sraplus')
 library(sraplus)
 ## You need to put the file "Return.RData" in the "data" folder of the
 ## package. It's too large to include it and should be removed later. Comes
@@ -21,11 +21,10 @@ Taxon <- c(Class="Actinopterygii", Order="Perciformes",
 ## Run SIR to get posterior samples
 fit <- run.SIR(nrep=nrep, Catch=Catch, Taxon=Taxon, InitialDepletePrior=.8,
                InitialDepleteCV=1, deplete.mean=2, deplete.cv=0.5,
-               AgeVulnOffset=-1)
+               AgeVulnOffset=-2, years=2005:2015)
 
-## Quick plot to show the output
+## Quick time series plots
 par(mfrow=c(3,1))
-fit$years <- 2005:2015
 plot_ssb(fit)
 plot_bstatus(fit)
 plot_ustatus(fit)
@@ -33,5 +32,5 @@ plot_ustatus(fit)
 ## plots of MSY reference points and NLL
 plot_reference(fit)
 
-## Look at prior vs posterior patterns
+## Look at biological prior vs posterior patterns
 plot_draws(fit)

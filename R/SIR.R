@@ -27,6 +27,8 @@
 #'   before it. Thus (age of vulnerability = age of maturity +
 #'   AgeVulnOffset). Defaults -1. Note that AgeMat is stochastic inside the
 #'   function, so age at vulnerability will vary with it.
+#' @param years Optional vector of years which is used by plotting
+#'   functions. Defaults to 1:length(Catch).
 #' @return A list containing depletion, SSB, and harvest rate (U) for
 #'   posterior draws, and a vector of Keepers
 #' @export
@@ -36,9 +38,11 @@ run.SIR <- function(nrep, Catch, Taxon, InitialDepletePrior,
                     deplete.cv=NULL,
                     deplete.distribution=1, harvest.distribution=1,
                     harvest.mean=NULL, harvest.sd=NULL,
-                    AgeVulnOffset=-1,
+                    AgeVulnOffset=-1, years=NULL,
                     pct.keep=10, ProcessError=TRUE, penalties=NULL, simulation=NULL){
   NY <- length(Catch)
+  if(is.null(years)) years <- 1:NY
+  stopifnot(length(Catch) == length(years))
   Bstore <- array(dim=c(NY,nrep))
   Dstore <- array(dim=c(NY,nrep))
   Ustore <- array(dim=c(NY,nrep))
@@ -142,7 +146,7 @@ run.SIR <- function(nrep, Catch, Taxon, InitialDepletePrior,
                 deplete.cv=deplete.cv, deplete.distribution,
                 harvest.mean=harvest.mean,
                 harvest.sd=harvest.sd, harvest.distribution=harvest.distribution)
-  return(list(ssb=Bstore[,K], U=Ustore[,K], depletion=Dstore[,K],
+  return(list(years=years, ssb=Bstore[,K], U=Ustore[,K], depletion=Dstore[,K],
               umsy=umsy[K], cmsy=cmsy[K], bmsy=bmsy[K], uscaled=Uscaledstore[,K],
               bscaled=Bscaledstore[,K], recdevs=recdevs, penalties=penalties,
               Keepers=K, crashed=crashed, likes=LikeStore, Catch=Catch,
