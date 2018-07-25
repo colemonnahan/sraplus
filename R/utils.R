@@ -180,3 +180,97 @@ plot_recdevs <- function(fit){
   }
 }
 
+
+#' Plot management quantities for one or more fits
+#' @param ... A series of fits of class srafit
+#' @param names Optional vector of names
+#' @export
+plot_fit <- function(..., names=NULL){
+  old.par <- par(no.readonly=TRUE)
+  on.exit(par(old.par))
+  fits <- list(...)
+  if(!all(unlist(lapply(fits, is.srafit))))
+    stop("Some arguments passed are not of class srafit")
+  if(is.null(names))
+    names <- paste0('fit',1:length(fits))
+  n <- 4
+  par(mfcol=c(n,n), mar=0*c(.1,.1,.1,.1), yaxs="i", xaxs="i", mgp=c(.25, .25,0),
+      tck=-.02, cex.axis=.65, col.axis=axis.col, oma=c(2.5, 2.5, .5,.5))
+  cols <- c('blue', 'red')
+  label.cex <- .8
+  ## Get quantities that span all fits
+  q1 <- .95
+  ylims.ts <- list(
+    c(0,quantile(unlist(lapply(fits, function(x) x$ssb)), probs=q1)),
+    c(0,quantile(unlist(lapply(fits, function(x) x$bscaled)), probs=q1)),
+    c(0,quantile(unlist(lapply(fits, function(x) x$U)), probs=q1)),
+    c(0,quantile(unlist(lapply(fits, function(x) x$uscaled)), probs=q1)))
+  ylims <- list(
+    1.1*c(0,max(unlist(lapply(fits, function(x) x$ssb[nrow(x$ssb),])))),
+    1.1*c(0,max(unlist(lapply(fits, function(x) x$bscaled[nrow(x$ssb),])))),
+    1.1*c(0,max(unlist(lapply(fits, function(x) x$U[nrow(x$ssb),])))),
+    1.1*c(0,max(unlist(lapply(fits, function(x) x$uscaled[nrow(x$ssb),])))))
+  box.tmp <- function() box(col=axis.col)
+  axis.col <- gray(.5)
+  cex.label <- .7
+  for(cc in 1:4){
+    for(rr in 1:4){
+      for(ii in 1:length(fits)){
+        x <- fits[[ii]]
+        term <- cbind(ssb=x$ssb[nrow(x$ssb),], bscaled=x$bscaled[nrow(x$bscaled),],
+                      U=x$U[nrow(x$U),],
+                      uscaled=x$uscaled[nrow(x$uscaled),])
+        time <- list(ssb=x$ssb, bscaled=x$bscaled, U=x$U, uscaled=x$uscaled)
+        term.names <- c("SSB", "B/BMSY", "U", "U/UMSY")
+        ## case 1 is diagonal; time series
+        tmp <- time[[rr]]
+        if(rr==cc){
+          if(ii==1){
+            plot(x$years, tmp[,1], type='p', col=cols[ii],
+                 ylim=ylims.ts[[rr]], axes=FALSE)
+            mtext(text=term.names[rr], line=-1.5, cex=cex.label)
+            box.tmp()
+          } else {
+            lines(x$years, tmp[,1], col=cols[ii])
+          }
+        }
+        ## case 2 is lower off diagonal: scatter plot of terminal years
+        if(rr > cc) {
+          if(ii==1){
+            plot(term[,rr], term[,cc],  col=cols[ii], ylim=ylims[[cc]],
+                 xlim=ylims[[rr]],
+                 xlab=term.names[rr], ylab=term.names[cc], axes=FALSE)
+            box.tmp()
+          } else {
+            points(term[,rr], term[,cc],  col=cols[ii])
+          }
+        }
+        ## case 3 is upper diagonal and is blank for now
+        if(rr < cc) {
+          if(ii==1){
+            plot(0,0, type='n', ann=FALSE, axes=FALSE)
+          }
+        }
+      } # end loop over fits
+      ## Add special cases of axes on the ends
+      if(cc==1)
+        mtext(term.names[rr], line=1+ifelse(rr %% 2 ==1, .1, .1),
+              cex=cex.label, side=2)
+      if(rr==n) {
+        ## par( mgp=c(.05, ifelse(cc %% 2 ==0, 0, .5),0) )
+        axis(1, col=axis.col, lwd=.5)
+      }
+      if(cc==1 & rr >1) {
+        ## par( mgp=c(.05, ifelse(rr %% 2 ==1, .15, .65),0) )
+        axis(2, col=axis.col, lwd=.5)
+      }
+      if(rr==1 & cc ==1){
+        ##    par( mgp=c(.05, ifelse(rr %% 2 ==1, .15, .65),0) )
+        axis(2, col=axis.col, lwd=.5)
+      }
+      if(rr==n)
+        mtext(term.names[rr], side=1, line=1.5+ifelse(rr %% 2 ==1, 0, .01),
+              cex=cex.label)
+    } # end of loop over rows
+  } # end of loop over columns
+}

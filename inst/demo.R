@@ -3,7 +3,7 @@
 library(FishLife)
 library(mvtnorm)
 library(dplyr)
- devtools::install('C:/Users/Cole/sraplus')
+devtools::install('C:/Users/Cole/sraplus')
 library(sraplus)
 library(ggplot2)
 ## You need to put the file "Return.RData" in the "data" folder of the
@@ -41,7 +41,7 @@ plot_draws(fit)
 fit2 <- run.SIR(nrep=nrep, Catch=Catch, Taxon=Taxon, InitialDepletePrior=.8,
                 InitialDepleteCV=1, deplete.mean=1.5, deplete.cv=0.3,
                 harvest.mean=0.5, harvest.sd=0.1,
-               AgeVulnOffset=-2)
+               AgeVulnOffset=-2, years=2005:2015)
 
 ## Compare two distinct fits (or more)
 plot_terminal(fit, fit2)
@@ -50,3 +50,7 @@ plot_terminal(fit, fit2)
 class(fit)
 print(fit)
 summary(fit)
+
+## Plot management comparisons
+axis.col <- gray(.5)
+plot_fit(fit, fit2)
