@@ -184,8 +184,15 @@ plot_recdevs <- function(fit){
 #' Plot management quantities for one or more fits
 #' @param ... A series of fits of class srafit
 #' @param names Optional vector of names
+#' @param lims The limits for metrics. A single range can be passed and
+#'   used for all 4 metrics, or a list of ranges. NULL specifies to
+#'   determine the ranges for each metric from the data.
 #' @export
-plot_fit <- function(..., names=NULL){
+plot_fit <- function(..., names=NULL, lims=c(0,3)){
+  axis.col <- gray(.5)
+  cex.label <- .7
+  box.tmp <- function() box(col=axis.col)
+
   old.par <- par(no.readonly=TRUE)
   on.exit(par(old.par))
   fits <- list(...)
@@ -194,61 +201,84 @@ plot_fit <- function(..., names=NULL){
   if(is.null(names))
     names <- paste0('fit',1:length(fits))
   n <- 4
-  par(mfcol=c(n,n), mar=0*c(.1,.1,.1,.1), yaxs="i", xaxs="i", mgp=c(.25, .25,0),
+  nfits <- length(fits)
+  cols <- 1:nfits
+  par(mfcol=c(n,n), mar=c(.1,.1,.1,.1), yaxs="i", xaxs="i", mgp=c(.25, .25,0),
       tck=-.02, cex.axis=.65, col.axis=axis.col, oma=c(2.5, 2.5, .5,.5))
-  cols <- c('blue', 'red')
   label.cex <- .8
   ## Get quantities that span all fits
   q1 <- .95
-  ylims.ts <- list(
-    c(0,quantile(unlist(lapply(fits, function(x) x$ssb)), probs=q1)),
-    c(0,quantile(unlist(lapply(fits, function(x) x$bscaled)), probs=q1)),
-    c(0,quantile(unlist(lapply(fits, function(x) x$U)), probs=q1)),
-    c(0,quantile(unlist(lapply(fits, function(x) x$uscaled)), probs=q1)))
-  ylims <- list(
-    1.1*c(0,max(unlist(lapply(fits, function(x) x$ssb[nrow(x$ssb),])))),
-    1.1*c(0,max(unlist(lapply(fits, function(x) x$bscaled[nrow(x$ssb),])))),
-    1.1*c(0,max(unlist(lapply(fits, function(x) x$U[nrow(x$ssb),])))),
-    1.1*c(0,max(unlist(lapply(fits, function(x) x$uscaled[nrow(x$ssb),])))))
-  box.tmp <- function() box(col=axis.col)
-  axis.col <- gray(.5)
-  cex.label <- .7
-  for(cc in 1:4){
-    for(rr in 1:4){
+  if(is.null(lims)){
+  ## ylims.ts <- list(
+  ##   c(0,quantile(unlist(lapply(fits, function(x) x$depletion)), probs=q1)),
+  ##   c(0,quantile(unlist(lapply(fits, function(x) x$bscaled)), probs=q1)),
+  ##   c(0,quantile(unlist(lapply(fits, function(x) x$U)), probs=q1)),
+  ##   c(0,quantile(unlist(lapply(fits, function(x) x$uscaled)), probs=q1)))
+  lims <- list(
+    1.1*c(0,max(unlist(lapply(fits, function(x) x$depletion[nrow(x$depletion),])))),
+    1.1*c(0,max(unlist(lapply(fits, function(x) x$bscaled[nrow(x$depletion),])))),
+    1.1*c(0,max(unlist(lapply(fits, function(x) x$U[nrow(x$depletion),])))),
+    1.1*c(0,max(unlist(lapply(fits, function(x) x$uscaled[nrow(x$depletion),])))))
+  } else {
+    ## If single range provided, replicate it for each metric
+    if(!is.list(lims)){
+      lims <- rep(list(lims), n)
+    } else {
+      ## Otherwise user passed list so check it
+      stopifnot(length(lims) == n)
+    }
+  }
+  for(cc in 1:n){
+    for(rr in 1:n){
       for(ii in 1:length(fits)){
         x <- fits[[ii]]
-        term <- cbind(ssb=x$ssb[nrow(x$ssb),], bscaled=x$bscaled[nrow(x$bscaled),],
+        term <- cbind(depletion=x$depletion[nrow(x$depletion),], bscaled=x$bscaled[nrow(x$bscaled),],
                       U=x$U[nrow(x$U),],
                       uscaled=x$uscaled[nrow(x$uscaled),])
-        time <- list(ssb=x$ssb, bscaled=x$bscaled, U=x$U, uscaled=x$uscaled)
-        term.names <- c("SSB", "B/BMSY", "U", "U/UMSY")
+        time <- list(depletion=x$depletion, bscaled=x$bscaled, U=x$U, uscaled=x$uscaled)
+        term.names <- c("Depletion", "B/BMSY", "U", "U/UMSY")
         ## case 1 is diagonal; time series
         tmp <- time[[rr]]
         if(rr==cc){
           if(ii==1){
-            plot(x$years, tmp[,1], type='p', col=cols[ii],
-                 ylim=ylims.ts[[rr]], axes=FALSE)
+            plot(x$years, tmp[,1], type='n', col=cols[ii],
+                 ylim=lims[[rr]], axes=FALSE, ann=FALSE)
+            }
             mtext(text=term.names[rr], line=-1.5, cex=cex.label)
+            add.ribbon(x=x$years, z=t(time[[cc]]), col=cols[ii], alpha.level=c(.5))
+            abline(h=1, lty=3, col=axis.col)
             box.tmp()
-          } else {
-            lines(x$years, tmp[,1], col=cols[ii])
-          }
         }
         ## case 2 is lower off diagonal: scatter plot of terminal years
         if(rr > cc) {
           if(ii==1){
-            plot(term[,rr], term[,cc],  col=cols[ii], ylim=ylims[[cc]],
-                 xlim=ylims[[rr]],
-                 xlab=term.names[rr], ylab=term.names[cc], axes=FALSE)
+            plot(term[,cc], term[,rr],  col=cols[ii], ylim=lims[[rr]],
+                 xlim=lims[[cc]], ann=FALSE,
+                 xlab=term.names[cc], ylab=term.names[rr], axes=FALSE)
+            abline(v=1, h=1, col=axis.col, lty=3)
             box.tmp()
           } else {
-            points(term[,rr], term[,cc],  col=cols[ii])
+            points(term[,cc], term[,rr],  col=cols[ii])
           }
         }
-        ## case 3 is upper diagonal and is blank for now
+        ## case 3 is upper diagonal and is blank for now except for some
+        ## special cases
         if(rr < cc) {
           if(ii==1){
-            plot(0,0, type='n', ann=FALSE, axes=FALSE)
+            plot(x$years, x$years, ylim=c(0, 1.1*max(x$Catch)), type='n', ann=FALSE, axes=FALSE)
+          }
+          ## Catch in the upper right
+          if(cc==n & rr ==1){
+            lines(x$years, x$Catch)
+            axis(1); axis(2)
+            box.tmp()
+            mtext('Catches', side=2, line=1.5, cex=cex.label)
+          }
+          if(cc==n & rr==2){
+            tmp <- paste(names,unlist(lapply(fits, function(x)
+              length(unique(x$Keepers)))), sep='=')
+            legend('center', title='Number of draws', pch=1, col=cols,
+                   legend=tmp, bty='n')
           }
         }
       } # end loop over fits
@@ -257,7 +287,7 @@ plot_fit <- function(..., names=NULL){
         mtext(term.names[rr], line=1+ifelse(rr %% 2 ==1, .1, .1),
               cex=cex.label, side=2)
       if(rr==n) {
-        ## par( mgp=c(.05, ifelse(cc %% 2 ==0, 0, .5),0) )
+        par( mgp=c(.05, ifelse(cc %% 2 ==0, 0, .5),0) )
         axis(1, col=axis.col, lwd=.5)
       }
       if(cc==1 & rr >1) {
@@ -268,9 +298,10 @@ plot_fit <- function(..., names=NULL){
         ##    par( mgp=c(.05, ifelse(rr %% 2 ==1, .15, .65),0) )
         axis(2, col=axis.col, lwd=.5)
       }
-      if(rr==n)
-        mtext(term.names[rr], side=1, line=1.5+ifelse(rr %% 2 ==1, 0, .01),
-              cex=cex.label)
+      ## if(rr==n)
+      ##   mtext(term.names[cc], side=1, line=1.5+ifelse(rr %% 2 ==1, 0, .01),
+      ##         cex=cex.label)
     } # end of loop over rows
   } # end of loop over columns
 }
+

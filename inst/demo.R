@@ -3,7 +3,8 @@
 library(FishLife)
 library(mvtnorm)
 library(dplyr)
-devtools::install('C:/Users/Cole/sraplus')
+devtools::document('..')
+devtools::install('C:/Users/Cole/sraplus', quick=TRUE)
 library(sraplus)
 library(ggplot2)
 ## You need to put the file "Return.RData" in the "data" folder of the
@@ -46,11 +47,13 @@ fit2 <- run.SIR(nrep=nrep, Catch=Catch, Taxon=Taxon, InitialDepletePrior=.8,
 ## Compare two distinct fits (or more)
 plot_terminal(fit, fit2)
 
-## The return is an object of class 'srafit'
+## The return is an object of class 'srafit'. Not heavily used for now but
+## probably will be useful later.
 class(fit)
 print(fit)
 summary(fit)
 
 ## Plot management comparisons
-axis.col <- gray(.5)
 plot_fit(fit, fit2)
+
+
