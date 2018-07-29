@@ -27,7 +27,7 @@ plot_terminal <- function(..., names=NULL, plot=TRUE, xlim=NULL, q=c(0.005, 0.99
     ## Get the prior for B/BMSY
     mean <- fits[[i]]$penalties$deplete.mean
     std <- fits[[i]]$penalties$deplete.cv
-    if(!is.null(mean)){
+    if(!is.null(mean) & !is.null(std)){
       bb <- seq(qnorm(q[1], mean=mean, sd=std),
                 to=qnorm(q[2], mean=mean, sd=std), len=500)
       prb[[i]] <- data.frame(fit=names[i], metric='B/BMSY', status=bb,
@@ -36,7 +36,7 @@ plot_terminal <- function(..., names=NULL, plot=TRUE, xlim=NULL, q=c(0.005, 0.99
     ## Same for U/UMSY
     mean <- fits[[i]]$penalties$harvest.mean
     std <- fits[[i]]$penalties$harvest.sd
-    if(!is.null(mean)){
+    if(!is.null(mean) & !is.null(std)){
       uu <- seq(qnorm(q[1], mean=mean, sd=std),
                 to=qnorm(q[2], mean=mean, sd=std), len=500)
       pru[[i]] <- data.frame(fit=names[i], metric='U/UMSY', status=uu,
@@ -68,15 +68,28 @@ plot_terminal <- function(..., names=NULL, plot=TRUE, xlim=NULL, q=c(0.005, 0.99
 #'
 #' @template plot_args
 #' @export
-plot_reference <- function(fit){
-  stopifnot(is.srafit(fit))
+plot_reference <- function(..., names=NULL, plot=TRUE){
+  fits <- list(...)
+  if(!all(unlist(lapply(fits, is.srafit))))
+    stop("Some arguments passed are not of class srafit")
+  if(is.null(names)) names <- paste0('fit',1:length(fits))
+  stopifnot(length(names) == length(fits))
   old.par <- par(no.readonly=TRUE)
   on.exit(par(old.par))
-  par(mfrow=c(2,2), mgp=c(1.1, .3, 0), tck=-.02, mar=c(2.5,2.5,.5,.5))
-  hist(log(fit$likes[fit$likes>0]), main=NA, xlab="Likelihood", ylab=NA)
-  hist(fit$bmsy, main=NA, xlab="BMSY", ylab=NA)
-  hist(fit$umsy, main=NA, xlab="UMSY", ylab=NA, xlim=c(0,1))
-  hist(fit$cmsy, main=NA, xlab="MSY", ylab=NA)
+  tmp <- list()
+  for(i in 1:length(fits)){
+    x <- fits[[i]]
+    tmp[[i]] <- data.frame(fit=names[i], BMSY=x$bmsy, UMSY=x$umsy, MSY=x$cmsy,
+                      log_likelihood=log(x$likes[x$Keepers]))
+  }
+  out <- do.call(rbind, tmp)
+  results.long <- reshape2::melt(out, 'fit', variable.name='metric')
+  g <- ggplot(results.long) +
+    geom_histogram(aes(value, y=..density.., fill=fit),
+                   position='identity', alpha=1/length(fits), bins=30) +
+    facet_wrap('metric', scales='free')
+  if(plot) print(g)
+  return(invisible(g))
 }
 
 
@@ -192,7 +205,6 @@ plot_fit <- function(..., names=NULL, lims=c(0,3)){
   axis.col <- gray(.5)
   cex.label <- .7
   box.tmp <- function() box(col=axis.col)
-
   old.par <- par(no.readonly=TRUE)
   on.exit(par(old.par))
   fits <- list(...)
