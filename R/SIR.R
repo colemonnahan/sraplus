@@ -5,6 +5,8 @@
 #' @param Taxon A list with taxonomic information, including 'Class',
 #'   'Order', 'Family', 'Genus', 'Species'. Any blanks will be converted to
 #'   'predictive' internally when querying FishLife.
+#' @param Kprior Maybe a multiplier on K?
+#' @param Kscale Scalar to control the initial biomass which is generated
 #' @param InitialDepletePrior Initial depletion mean
 #' @param InitialDepleteCV Initial depletion CV
 #' @param deplete.mean Final year depletion (not in log space)

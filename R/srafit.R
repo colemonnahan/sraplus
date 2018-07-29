@@ -17,18 +17,20 @@ construct_srafit <- function(fit){
 is.srafit <- function(x) inherits(x, "srafit")
 
 #' Print method for class 'srafit'
-#' @param fit Object of class srafit
+#' @param object Object of class srafit
+#' @param ... Other arguments to be passed
 #' @export
-summary.srafit <- function(fit){
+summary.srafit <- function(object, ...){
   ## for now just print it
-  print.srafit(fit)
+  print.srafit(object, ...)
 }
 
 #' Print method for class 'srafit'
-#' @param fit Object of class srafit
+#' @param x Object of class srafit
+#' @param ... Other arguments to be passed
 #' @export
-print.srafit <- function(fit){
-  cat(paste("Fitted object from sraplus for species:\n"))
-  cat(fit$Taxon, "\n")
-  cat('With', length(unique(fit$Keepers)), 'unique posterior draws\n')
+print.srafit <- function(x, ...){
+  cat(paste("Objectted object from sraplus for species:\n"))
+  cat(x$Taxon, "\n")
+  cat('With', length(unique(x$Keepers)), 'unique posterior draws\n')
 }

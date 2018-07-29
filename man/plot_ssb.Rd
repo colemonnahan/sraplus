@@ -11,9 +11,19 @@ plot_ssb(fit, ylim = NULL)
 
 \item{ylim}{The ylim to use, if not specified will be calculated
 internally.}
+
+\item{...}{A series of fits as returned by run.SIR}
+
+\item{names}{An optional character string with length equal to the
+number of fits, used to identify fits on the plot.}
+
+\item{plot}{Boolean for whether to print the plot.}
 }
 \value{
-Nothing. A plot is created.
+Functions using base plots return nothing, but those using
+  ggplot2 return an invisible ggplot object which can then be used to
+  print or save as normally done. In all cases if 'plot=TRUE' then a
+  plot is created.
 }
 \description{
 Plot spawning biomass time series for posterior draws with catches.

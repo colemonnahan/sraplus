@@ -19,6 +19,10 @@ draw.priors(N, InitialDepletePrior, InitialDepleteCV, Kprior, Catch, Taxon,
 
 \item{Catch}{Vector of catch}
 
+\item{Taxon}{A list with taxonomic information, including 'Class',
+'Order', 'Family', 'Genus', 'Species'. Any blanks will be converted to
+'predictive' internally when querying FishLife.}
+
 \item{Kscale}{Scalar to control the initial biomass which is generated
 as runif(N, Carry/Kscale, Carry*Kscale) where Carry=Kprior*max(Catch).}
 }

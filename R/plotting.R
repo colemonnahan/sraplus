@@ -2,10 +2,7 @@
 
 #' Plot terminal year U/UMSY and B/BMSY posteriors and priors (if
 #' applicable) for a series of fits
-#' @param ... A series of fits as returned by run.SIR
-#' @param names An optional character string with length equal to the
-#' number of fits, used to identify fits on the plot.
-#' @param plot Boolean for whether to print the plot.
+#' @template plot_args
 #' @param xlim Optional xlim to override the defaults chosen by ggplot
 #' @param q Optional quantiles between which to calculate prior
 #' density. Defaults to c(0.005,0.995), that is 99\%.
@@ -195,13 +192,12 @@ plot_recdevs <- function(fit){
 
 
 #' Plot management quantities for one or more fits
-#' @param ... A series of fits of class srafit
-#' @param names Optional vector of names
+#' @template plot_args
 #' @param lims The limits for metrics. A single range can be passed and
 #'   used for all 4 metrics, or a list of ranges. NULL specifies to
 #'   determine the ranges for each metric from the data.
 #' @export
-plot_fit <- function(..., names=NULL, lims=c(0,3)){
+plot_fit <- function(..., lims=c(0,3)){
   axis.col <- gray(.5)
   cex.label <- .7
   box.tmp <- function() box(col=axis.col)

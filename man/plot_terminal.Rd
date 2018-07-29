@@ -20,8 +20,15 @@ number of fits, used to identify fits on the plot.}
 
 \item{q}{Optional quantiles between which to calculate prior
 density. Defaults to c(0.005,0.995), that is 99\%.}
+
+\item{fit}{A returned list from run.SIR}
 }
 \value{
+Functions using base plots return nothing, but those using
+  ggplot2 return an invisible ggplot object which can then be used to
+  print or save as normally done. In all cases if 'plot=TRUE' then a
+  plot is created.
+
 An invisible ggplot2 object which can be printed or saved.
 }
 \description{

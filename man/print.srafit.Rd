@@ -4,10 +4,12 @@
 \alias{print.srafit}
 \title{Print method for class 'srafit'}
 \usage{
-\method{print}{srafit}(fit)
+\method{print}{srafit}(x, ...)
 }
 \arguments{
-\item{fit}{Object of class srafit}
+\item{x}{Object of class srafit}
+
+\item{...}{Other arguments to be passed}
 }
 \description{
 Print method for class 'srafit'

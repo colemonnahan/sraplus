@@ -6,6 +6,9 @@
 #' @param InitialDepleteCV CV of intial lognormal depletion penalty
 #' @param Kprior Maybe a multiplier on K?
 #' @param Catch Vector of catch
+#' @param Taxon A list with taxonomic information, including 'Class',
+#'   'Order', 'Family', 'Genus', 'Species'. Any blanks will be converted to
+#'   'predictive' internally when querying FishLife.
 #' @param Kscale Scalar to control the initial biomass which is generated
 #'   as runif(N, Carry/Kscale, Carry*Kscale) where Carry=Kprior*max(Catch).
 #' @return A list that contains 'draws', a data.frame with N random draws from all

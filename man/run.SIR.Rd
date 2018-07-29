@@ -23,9 +23,13 @@ run.SIR(nrep, Catch, Taxon, InitialDepletePrior, InitialDepleteCV, Kprior = 3,
 
 \item{InitialDepleteCV}{Initial depletion CV}
 
+\item{Kprior}{Maybe a multiplier on K?}
+
 \item{deplete.mean}{Final year depletion (not in log space)}
 
 \item{deplete.cv}{Final year CV, used as SD}
+
+\item{Kscale}{Scalar to control the initial biomass which is generated}
 
 \item{deplete.distribution}{The likelhiood to use, either (1) normal or
 (2) lognormal}
