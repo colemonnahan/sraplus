@@ -5,10 +5,10 @@
 \title{Run the SIR algorithm for a draws and stock (temporary)}
 \usage{
 run.SIR(nrep, Catch, Taxon, InitialDepletePrior, InitialDepleteCV, Kprior = 3,
-  deplete.mean = NULL, deplete.cv = NULL, deplete.distribution = 1,
-  harvest.distribution = 1, harvest.mean = NULL, harvest.sd = NULL,
-  AgeVulnOffset = -1, years = NULL, pct.keep = 10, ProcessError = TRUE,
-  penalties = NULL, simulation = NULL)
+  deplete.mean = NULL, deplete.cv = NULL, Kscale = 2,
+  deplete.distribution = 1, harvest.distribution = 1, harvest.mean = NULL,
+  harvest.sd = NULL, AgeVulnOffset = -1, years = NULL, pct.keep = 10,
+  ProcessError = TRUE, penalties = NULL, simulation = NULL)
 }
 \arguments{
 \item{nrep}{Number of replicates to run.}

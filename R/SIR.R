@@ -35,7 +35,7 @@
 #'
 run.SIR <- function(nrep, Catch, Taxon, InitialDepletePrior,
                     InitialDepleteCV, Kprior=3, deplete.mean=NULL,
-                    deplete.cv=NULL,
+                    deplete.cv=NULL, Kscale=2,
                     deplete.distribution=1, harvest.distribution=1,
                     harvest.mean=NULL, harvest.sd=NULL,
                     AgeVulnOffset=-1, years=NULL,
@@ -57,7 +57,7 @@ run.SIR <- function(nrep, Catch, Taxon, InitialDepletePrior,
   ## #########################
   ## Draw from priors for SIR
   priors <- draw.priors(N=nrep, InitialDepletePrior=InitialDepletePrior,
-                       InitialDepleteCV=InitialDepleteCV,
+                       InitialDepleteCV=InitialDepleteCV, Kscale=Kscale,
                        Kprior=Kprior, Catch=Catch, Taxon=Taxon)
   draws <- priors$draws
   for (irep in 1:nrep){   ##loop over replicates
