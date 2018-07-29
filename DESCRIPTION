@@ -1,7 +1,9 @@
 Package: sraplus
 Title: What the Package Does (one line, title case)
 Version: 0.0.0.9000
-Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
+Authors@R: c(person("Cole", "Monnahan", email='monnahc@uw.edu', role = c("aut", "cre")),
+  person("Ray", "Hilborn", role='ctb'),
+  person("Merrill", "Rudd", role='ctb'))
 Description: What the package does (one paragraph).
 Depends: R (>= 3.4.0)
 License: GPL-3
