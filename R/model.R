@@ -24,7 +24,8 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
                      ProcessError=TRUE, simulation=NULL){
   stopifnot(AgeMat>0)
   AgeVuln <- AgeMat + AgeVulnOffset
-  stopifnot(AgeVuln>0); stopifnot(AgeVuln<AgeMax)
+  stopifnot(AgeVuln>=0);
+  stopifnot(AgeVuln<AgeMax)
   use.sim <- !is.null(simulation)
   if(use.sim){
     stopifnot(is.numeric(simulation$FishMort))
