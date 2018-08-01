@@ -30,3 +30,82 @@ add.ribbon <- function(x, z, col, alpha.level, alpha.min=0, alpha.max=1){
     }
 }
 
+
+#' Check whether the penalties list is valid.
+#'
+#' @param penalties A list passed by the user
+#'
+#' @return Nothing, an error occurs if a problem is found.
+check_penalties <- function(penalties){
+  with(penalties, {
+  if(!is.null(initial.dist) & initial.dist==3){
+    if(is.null(initial.min) | is.null(initial.max))
+      stop("If using initial uniform distribution min and max must be specified")
+  }
+  })
+}
+
+
+
+
+#' Extract prior information for initial biomass, terminal U/UMSY (ustatus)
+#' and terminal B/BMSY (bstatus) from a fit, which is useful for plotting
+#' and other tasks.
+#'
+#' @details This function always returns prior values evaluated in natural
+#' space, regardless of the distribution used. Thus lognormal priors will
+#' be converted to natural space.
+#'
+#' @param fit An object of class srafit
+#' @param metric Which metric to use from 'initial', 'ustatus', 'bstatus'.
+#' @param interval Whether to return the prior credible interval or a
+#'   sequence of points evaluated at the prior density.
+#' @param percentile The interval converage (e.g., .95 is the 95\% credible
+#'   interval)
+#' @param n.points The number of points if interval is FALSE
+#' @return A vector with (lwr, median, upr) if interval is TRUE, and a
+#'   data.frame with prior value (x) and prior density (y)
+#'
+get_prior <- function(fit, metric, interval=TRUE, percentile=.95,
+                      n.points=1000){
+  pen <- fit$penalties
+  metric <- match.arg(metric, choices=c('initial', 'ustatus', 'bstatus'))
+  if(metric == 'initial' & pen$initial.dist==3){
+    ## initial can be uniform and this is a special case
+    return()
+  }
+  ## Otherwise they are lognormal or normal
+  if(metric == 'ustatus'){
+    mu <- pen$ustatus.mean; sigma <- pen$ustatus.sd
+    dist <- pen$ustatus.dist
+  } else if(metric == 'bstatus') {
+    mu <- pen$bstatus.mean; sigma <- pen$bstatus.sd
+    dist <- pen$bstatus.dist
+  } else if(metric == 'initial'){
+    mu <- pen$initial.mean; sigma <- pen$initial.sd
+    dist <- pen$initial.dist
+  } else {
+    stop("Invalid metric option")
+  }
+  if(is.null(dist)) stop("No penalty found for supplied metric")
+  ## Symmetic probabilities
+  p1 <- (1-percentile)/2
+  p2 <- percentile+(1-percentile)/2
+  if(dist==2){
+    q1 <- qlnorm(p1, mean=mu, sd=sigma)
+    q2 <- qlnorm(p2, mean=mu, sd=sigma)
+    CI <- c(q1, qlnorm(.5, mean=mu, sd=sigma), q2)
+    xseq <- seq(q1, to=q2, len=n.points)
+    df <- data.frame(x=xseq, y=dlnorm(xseq, mu, sigma))
+  } else {
+    q1 <- qnorm(p1, mean=mu, sd=sigma)
+    q2 <- qnorm(p2, mean=mu, sd=sigma)
+    CI <- c(q1, qnorm(.5, mean=mu, sd=sigma), q2)
+    xseq <- seq(q1, to=q2, len=n.points)
+    df <- data.frame(x=xseq, y=dnorm(xseq, mu, sigma))
+  }
+  if(interval)
+    return(CI)
+  else
+    return(df)
+}
