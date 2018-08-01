@@ -1,52 +1,63 @@
 ### Plotting functions for package
 
-#' Plot terminal year U/UMSY and B/BMSY posteriors and priors (if
-#' applicable) for a series of fits
+#' Plot priors vs posteriors for carrying capacity, initial depletion,
+#' terminal year U/UMSY and B/BMSY for a series of fits.
 #' @template plot_args
-#' @param xlim Optional xlim to override the defaults chosen by ggplot
-#' @param q Optional quantiles between which to calculate prior
-#' density. Defaults to c(0.005,0.995), that is 99\%.
+#' @param percentile Optional percentile to calculate prior
+#'   density range. Defaults to 99\%.
 #' @return An invisible ggplot2 object which can be printed or saved.
 #' @export
-plot_terminal <- function(..., names=NULL, plot=TRUE, xlim=NULL, q=c(0.005, 0.995)){
+plot_penalties <- function(..., names=NULL, plot=TRUE,
+                           percentile=0.99){
   fits <- list(...)
   if(!all(unlist(lapply(fits, is.srafit))))
     stop("Some arguments passed are not of class srafit")
   if(is.null(names)) names <- paste0('fit',1:length(fits))
   stopifnot(length(names) == length(fits))
   stopifnot(plot %in% c(TRUE, FALSE))
-  bscaled <- uscaled <- list()
-  pru <- prb <- list()
+  poc <- poi <- pou <- pob <- list()
+  prc <- pri <- pru <- prb <- list()
   for(i in 1:length(fits)){
     ## get posteriors
-    uscaled[[i]] <- data.frame(fit=names[i], status=fits[[i]]$uscaled[length(fits[[i]]$year),])
-    bscaled[[i]] <- data.frame(fit=names[i], status=fits[[i]]$bscaled[length(fits[[i]]$year),])
-    ## Get the prior for B/BMSY
+    keep <- fits[[i]]$Keepers
+    poc[[i]] <- data.frame(fit=names[i], metric='carry', posterior=fits[[i]]$draws$Cprior[keep])
+    poi[[i]] <- data.frame(fit=names[i], metric='initial', posterior=fits[[i]]$draws$InitialPrior[keep])
+    pou[[i]] <- data.frame(fit=names[i], metric='ustatus', posterior=fits[[i]]$uscaled[length(fits[[i]]$year),])
+    pob[[i]] <- data.frame(fit=names[i], metric='bstatus', posterior=fits[[i]]$bscaled[length(fits[[i]]$year),])
+    ## Get the prior for carry
+    if(!is.null(fits[[i]]$penalties$carry.dist)){
+      cc <- get_prior(fits[[i]], metric='carry', interval=FALSE, percentile=percentile)
+      prc[[i]] <- data.frame(fit=names[i], metric='carry', prior=cc[,1], density=cc[,2])
+    }
+    ## initial
+    if(!is.null(fits[[i]]$penalties$initial.dist)){
+      ii <- get_prior(fits[[i]], metric='initial', interval=FALSE, percentile=percentile)
+      pri[[i]] <- data.frame(fit=names[i], metric='initial', prior=ii[,1], density=ii[,2])
+    }
     if(!is.null(fits[[i]]$penalties$bstatus.dist)){
-      bb <- get_prior(fits[[i]], metric='bstatus', interval=FALSE)
-      prb[[i]] <- data.frame(fit=names[i], metric='B/BMSY', status=bb[,1], height=bb[,2])
+      bb <- get_prior(fits[[i]], metric='bstatus', interval=FALSE, percentile=percentile)
+      prb[[i]] <- data.frame(fit=names[i], metric='bstatus', prior=bb[,1], density=bb[,2])
     }
     ## Same for U/UMSY
     if(!is.null(fits[[i]]$penalties$ustatus.dist)){
-      uu <- get_prior(fits[[i]], metric='ustatus', interval=FALSE)
-      pru[[i]] <- data.frame(fit=names[i], metric='U/UMSY', status=uu[,1], height=uu[,2])
+      uu <- get_prior(fits[[i]], metric='ustatus', interval=FALSE, percentile=percentile)
+      pru[[i]] <- data.frame(fit=names[i], metric='ustatus', prior=uu[,1], density=uu[,2])
     }
-  }
-  uscaled <- data.frame(metric='U/UMSY', do.call(rbind, uscaled))
-  bscaled <- data.frame(metric='B/BMSY', do.call(rbind, bscaled))
-  post <- rbind(uscaled, bscaled)
-  prior <- data.frame(rbind(do.call(rbind, prb), do.call(rbind, pru)))
+  } ## end loop over fits
+  ## Massage these into ggplot format
+  post <- do.call(rbind, c(poc, poi, pou, pob))
+  prior <- do.call(rbind, c(prc, pri, prb, pru))
   post$fit <- factor(post$fit, levels=names)
   prior$fit <- factor(prior$fit, levels=names)
-  prior <- prior[prior$status >= 0,]
+  ## None of these should be negative so chop it off
+  prior <- prior[prior$prior >= 0,]
   ## Creat ggplot item using the post and prior data sets
   alpha <- 1/length(fits)
   g <- ggplot() +
-    geom_histogram(data=post, aes(status, y=..density.., fill=fit),
+    geom_histogram(data=post, aes(posterior, y=..density.., fill=fit),
                    position='identity', alpha=alpha, bins=30) +
-    geom_line(data=prior, aes(x=status, y=height, color=fit), lwd=2, alpha=alpha) +
+    geom_line(data=prior, aes(x=prior, y=density, color=fit), lwd=2, alpha=alpha) +
     facet_wrap('metric', scales='free') + geom_vline(xintercept=1, col='red', lty=2)
-  if(!is.null(xlim)) g <- g + xlim(xlim)
   ## plot and return
   if(plot) print(g)
   return(invisible(g))
