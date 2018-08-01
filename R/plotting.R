@@ -22,28 +22,20 @@ plot_terminal <- function(..., names=NULL, plot=TRUE, xlim=NULL, q=c(0.005, 0.99
     uscaled[[i]] <- data.frame(fit=names[i], status=fits[[i]]$uscaled[length(fits[[i]]$year),])
     bscaled[[i]] <- data.frame(fit=names[i], status=fits[[i]]$bscaled[length(fits[[i]]$year),])
     ## Get the prior for B/BMSY
-    mean <- fits[[i]]$penalties$deplete.mean
-    std <- fits[[i]]$penalties$deplete.cv
-    if(!is.null(mean) & !is.null(std)){
-      bb <- seq(qnorm(q[1], mean=mean, sd=std),
-                to=qnorm(q[2], mean=mean, sd=std), len=500)
-      prb[[i]] <- data.frame(fit=names[i], metric='B/BMSY', status=bb,
-                             height=dnorm(bb, mean, std))
+    if(!is.null(fits[[i]]$penalties$bstatus.dist)){
+      bb <- get_prior(fits[[i]], metric='bstatus', interval=FALSE)
+      prb[[i]] <- data.frame(fit=names[i], metric='B/BMSY', status=bb[,1], height=bb[,2])
     }
     ## Same for U/UMSY
-    mean <- fits[[i]]$penalties$harvest.mean
-    std <- fits[[i]]$penalties$harvest.sd
-    if(!is.null(mean) & !is.null(std)){
-      uu <- seq(qnorm(q[1], mean=mean, sd=std),
-                to=qnorm(q[2], mean=mean, sd=std), len=500)
-      pru[[i]] <- data.frame(fit=names[i], metric='U/UMSY', status=uu,
-                             height=dnorm(uu, mean, std))
+    if(!is.null(fits[[i]]$penalties$ustatus.dist)){
+      uu <- get_prior(fits[[i]], metric='ustatus', interval=FALSE)
+      pru[[i]] <- data.frame(fit=names[i], metric='U/UMSY', status=uu[,1], height=uu[,2])
     }
   }
   uscaled <- data.frame(metric='U/UMSY', do.call(rbind, uscaled))
   bscaled <- data.frame(metric='B/BMSY', do.call(rbind, bscaled))
   post <- rbind(uscaled, bscaled)
-  prior <- rbind(do.call(rbind, prb), do.call(rbind, pru))
+  prior <- data.frame(rbind(do.call(rbind, prb), do.call(rbind, pru)))
   post$fit <- factor(post$fit, levels=names)
   prior$fit <- factor(prior$fit, levels=names)
   prior <- prior[prior$status >= 0,]
@@ -104,10 +96,9 @@ plot_bstatus <- function(fit, ylim=NULL){
        ylab="B/BMSY")
   trash <- apply(fit$bscaled, 2, function(i)
     lines(x=fit$year, y=i, col=rgb(0,0,0,.1)))
-  ci <- qnorm(c(0.025, .975), mean=fit$penalties$deplete.mean, fit$penalties$deplete.cv)
-  lines(x=rep(tail(fit$year,1),2), ci, col=2, lwd=2)
-  points(x=tail(fit$year,1), y=fit$penalties$deplete.mean, col=2, cex=1.5,
-         pch=16)
+  ci <- get_prior(fit, metric='bstatus', interval=TRUE)
+  lines(x=rep(tail(fit$year,1),2), ci[c(1,3)], col=2, lwd=2)
+  points(x=tail(fit$year,1), y=ci[2], col=2, cex=1.5, pch=16)
   abline(h=1, col='red', lty=3, lwd=2)
 }
 
@@ -124,10 +115,9 @@ plot_ustatus <- function(fit, ylim=NULL){
   plot(x=fit$year, y=fit$year, ylim=ylim, type="n",xlab='Year',
        ylab="U/UMSY")
   trash <- apply(fit$uscaled, 2, function(i) lines(fit$year,y=i, col=rgb(0,0,0,.1)))
-  ci <- qnorm(c(0.025, .975), mean=fit$penalties$harvest.mean, fit$penalties$harvest.sd)
-  lines(x=rep(tail(fit$year,1),2), ci, col=2, lwd=2)
-  points(x=tail(fit$year,1), y=fit$penalties$harvest.mean, col=2, cex=1.5,
-         pch=16)
+  ci <- get_prior(fit, metric='ustatus', interval=TRUE)
+  lines(x=rep(tail(fit$year,1),2), ci[c(1,3)], col=2, lwd=2)
+  points(x=tail(fit$year,1), y=ci[2], col=2, cex=1.5, pch=16)
   abline(h=1, col='red', lty=3, lwd=2)
 }
 
@@ -146,6 +136,10 @@ plot_ssb <- function(fit, ylim=NULL){
   ## Add individual trajectories that were kept
   trash <- apply(fit$ssb, 2, function(i)
     lines(fit$year, y=i, col=rgb(0,0,0,.1)))
+  ## Add confidence interval
+  ci <- get_prior(fit, metric='carry', interval=TRUE)
+  lines(x=rep(head(fit$year,1),2), ci[c(1,3)], col=2, lwd=2)
+  points(x=head(fit$year,1), y=ci[2], col=2, cex=1.5, pch=16)
   ## Add catch
   points(fit$year, fit$Catch, type='h', col='blue', lwd=3)
 }
@@ -197,7 +191,7 @@ plot_recdevs <- function(fit){
 #'   used for all 4 metrics, or a list of ranges. NULL specifies to
 #'   determine the ranges for each metric from the data.
 #' @export
-plot_fit <- function(..., lims=c(0,3)){
+plot_fit <- function(..., names=NULL, lims=c(0,3)){
   axis.col <- gray(.5)
   cex.label <- .7
   box.tmp <- function() box(col=axis.col)
