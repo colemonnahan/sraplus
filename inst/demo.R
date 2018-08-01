@@ -14,19 +14,20 @@ library(ggplot2)
 data(Return)
 
 ## A simulated stock history for demonstration purposes
-nrep <- 10000 # total reps, 10% will be kept
+nrep <- 20000 # total reps, 10% will be kept
 set.seed(2323)
 Catch <- runif(11, 50000, 300000)
 Taxon <- c(Class="Actinopterygii", Order="Perciformes",
            Family="Scombridae", Genus="Thunnus", Species="albacares")
-## Define the penalties. Defaults to normal distribution and a initial
-## distribution that is based on max catch (needs to be updated)
+## Define the penalties. Defaults to a uniform carrying capacity
+## distribution that is based on max catch (needs to be updated). bstatus =
+## terminal B/BMSY; ustatus=terminal U/UMSY; initial=initial depletion
 pen <- list(bstatus.mean=0, bstatus.sd=0.5, bstatus.dist=2,
             ustatus.mean=0, ustatus.sd=0.25, ustatus.dist=2,
             initial.mean=0, initial.sd=.3, initial.dist=2)
 ## Run SIR to get posterior samples
 fit <- run.SIR(nrep=nrep, Catch=Catch, Taxon=Taxon, penalties=pen,
-               AgeVulnOffset=-2, years=2005:2015)
+                years=2005:2015)
 
 ## Quick time series plots
 par(mfrow=c(3,1))
@@ -40,13 +41,17 @@ plot_ustatus(fit)
 plot_draws(fit)
 
 ## Run an arbitrary second fit and compare the differences.
-pen$ustatus.mean <- -.5
-pen$bstatus.sd <- .25
+pen2 <- list(bstatus.mean=0, bstatus.sd=0.75, bstatus.dist=2,
+            ustatus.mean=-.5, ustatus.sd=0.25, ustatus.dist=2,
+            initial.mean=0, initial.sd=.2, initial.dist=2,
+            ## now we specify a lognormal distribution for K explicitly
+            carry.mean=13.8, carry.sd=.2, carry.dist=2)
+## Also change the AgeVulnOffset from default of -1
 fit2 <- run.SIR(nrep=nrep, Catch=Catch, Taxon=Taxon,
-                penalties=pen, AgeVulnOffset=-2, years=2005:2015)
+                penalties=pen2, AgeVulnOffset=0, years=2005:2015)
 
-## Compare two distinct fits (or more)
-plot_terminal(fit, fit2)
+## Compare prior and posterior for two distinct fits (or more)
+plot_penalties(fit, fit2)
 ## plots of MSY reference points and NLL
 plot_reference(fit, fit2)
 
@@ -54,7 +59,8 @@ plot_reference(fit, fit2)
 ## probably will be useful later.
 class(fit)
 print(fit)
-summary(fit) # the same for now
+## credible intervals for prior and posterior on key management targets
+summary(fit)
 
 ## Plot management comparisons using specially-designed function.
 plot_fit(fit, fit2)
