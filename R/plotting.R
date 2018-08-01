@@ -1,60 +1,64 @@
 ### Plotting functions for package
 
-#' Plot terminal year U/UMSY and B/BMSY posteriors and priors (if
-#' applicable) for a series of fits
+#' Plot priors vs posteriors for carrying capacity, initial depletion,
+#' terminal year U/UMSY and B/BMSY for a series of fits.
 #' @template plot_args
-#' @param xlim Optional xlim to override the defaults chosen by ggplot
-#' @param q Optional quantiles between which to calculate prior
-#' density. Defaults to c(0.005,0.995), that is 99\%.
+#' @param percentile Optional percentile to calculate prior
+#'   density range. Defaults to 99\%.
 #' @return An invisible ggplot2 object which can be printed or saved.
 #' @export
-plot_terminal <- function(..., names=NULL, plot=TRUE, xlim=NULL, q=c(0.005, 0.995)){
+plot_penalties <- function(..., names=NULL, plot=TRUE,
+                           percentile=0.99){
   fits <- list(...)
   if(!all(unlist(lapply(fits, is.srafit))))
     stop("Some arguments passed are not of class srafit")
   if(is.null(names)) names <- paste0('fit',1:length(fits))
   stopifnot(length(names) == length(fits))
   stopifnot(plot %in% c(TRUE, FALSE))
-  bscaled <- uscaled <- list()
-  pru <- prb <- list()
+  poc <- poi <- pou <- pob <- list()
+  prc <- pri <- pru <- prb <- list()
   for(i in 1:length(fits)){
     ## get posteriors
-    uscaled[[i]] <- data.frame(fit=names[i], status=fits[[i]]$uscaled[length(fits[[i]]$year),])
-    bscaled[[i]] <- data.frame(fit=names[i], status=fits[[i]]$bscaled[length(fits[[i]]$year),])
-    ## Get the prior for B/BMSY
-    mean <- fits[[i]]$penalties$deplete.mean
-    std <- fits[[i]]$penalties$deplete.cv
-    if(!is.null(mean) & !is.null(std)){
-      bb <- seq(qnorm(q[1], mean=mean, sd=std),
-                to=qnorm(q[2], mean=mean, sd=std), len=500)
-      prb[[i]] <- data.frame(fit=names[i], metric='B/BMSY', status=bb,
-                             height=dnorm(bb, mean, std))
+    keep <- fits[[i]]$Keepers
+    poc[[i]] <- data.frame(fit=names[i], metric='carry', posterior=fits[[i]]$draws$Cprior[keep])
+    poi[[i]] <- data.frame(fit=names[i], metric='initial', posterior=fits[[i]]$draws$InitialPrior[keep])
+    pou[[i]] <- data.frame(fit=names[i], metric='ustatus', posterior=fits[[i]]$uscaled[length(fits[[i]]$year),])
+    pob[[i]] <- data.frame(fit=names[i], metric='bstatus', posterior=fits[[i]]$bscaled[length(fits[[i]]$year),])
+    ## Get the prior for carry
+    if(!is.null(fits[[i]]$penalties$carry.dist)){
+      cc <- get_prior(fits[[i]], metric='carry', interval=FALSE, percentile=percentile)
+      prc[[i]] <- data.frame(fit=names[i], metric='carry', prior=cc[,1], density=cc[,2])
+    }
+    ## initial
+    if(!is.null(fits[[i]]$penalties$initial.dist)){
+      ii <- get_prior(fits[[i]], metric='initial', interval=FALSE, percentile=percentile)
+      pri[[i]] <- data.frame(fit=names[i], metric='initial', prior=ii[,1], density=ii[,2])
     }
     ## Same for U/UMSY
-    mean <- fits[[i]]$penalties$harvest.mean
-    std <- fits[[i]]$penalties$harvest.sd
-    if(!is.null(mean) & !is.null(std)){
-      uu <- seq(qnorm(q[1], mean=mean, sd=std),
-                to=qnorm(q[2], mean=mean, sd=std), len=500)
-      pru[[i]] <- data.frame(fit=names[i], metric='U/UMSY', status=uu,
-                             height=dnorm(uu, mean, std))
+    if(!is.null(fits[[i]]$penalties$ustatus.dist)){
+      uu <- get_prior(fits[[i]], metric='ustatus', interval=FALSE, percentile=percentile)
+      pru[[i]] <- data.frame(fit=names[i], metric='ustatus', prior=uu[,1], density=uu[,2])
     }
-  }
-  uscaled <- data.frame(metric='U/UMSY', do.call(rbind, uscaled))
-  bscaled <- data.frame(metric='B/BMSY', do.call(rbind, bscaled))
-  post <- rbind(uscaled, bscaled)
-  prior <- rbind(do.call(rbind, prb), do.call(rbind, pru))
+    ## B/BMSY
+    if(!is.null(fits[[i]]$penalties$bstatus.dist)){
+      bb <- get_prior(fits[[i]], metric='bstatus', interval=FALSE, percentile=percentile)
+      prb[[i]] <- data.frame(fit=names[i], metric='bstatus', prior=bb[,1], density=bb[,2])
+    }
+  } ## end loop over fits
+  ## Massage these into ggplot format
+  post <- do.call(rbind, c(poc, poi, pou, pob))
+  prior <- do.call(rbind, c(prc, pri, prb, pru))
   post$fit <- factor(post$fit, levels=names)
   prior$fit <- factor(prior$fit, levels=names)
-  prior <- prior[prior$status >= 0,]
+  ## None of these should be negative so chop it off
+  prior <- prior[prior$prior >= 0,]
   ## Creat ggplot item using the post and prior data sets
   alpha <- 1/length(fits)
   g <- ggplot() +
-    geom_histogram(data=post, aes(status, y=..density.., fill=fit),
+    geom_histogram(data=post, aes(posterior, y=..density.., fill=fit),
                    position='identity', alpha=alpha, bins=30) +
-    geom_line(data=prior, aes(x=status, y=height, color=fit), lwd=2, alpha=alpha) +
+    geom_line(data=prior, aes(x=prior, y=density, color=fit), lwd=2, alpha=alpha) +
     facet_wrap('metric', scales='free') + geom_vline(xintercept=1, col='red', lty=2)
-  if(!is.null(xlim)) g <- g + xlim(xlim)
   ## plot and return
   if(plot) print(g)
   return(invisible(g))
@@ -104,10 +108,9 @@ plot_bstatus <- function(fit, ylim=NULL){
        ylab="B/BMSY")
   trash <- apply(fit$bscaled, 2, function(i)
     lines(x=fit$year, y=i, col=rgb(0,0,0,.1)))
-  ci <- qnorm(c(0.025, .975), mean=fit$penalties$deplete.mean, fit$penalties$deplete.cv)
-  lines(x=rep(tail(fit$year,1),2), ci, col=2, lwd=2)
-  points(x=tail(fit$year,1), y=fit$penalties$deplete.mean, col=2, cex=1.5,
-         pch=16)
+  ci <- get_prior(fit, metric='bstatus', interval=TRUE)
+  lines(x=rep(tail(fit$year,1),2), ci[c(1,3)], col=2, lwd=2)
+  points(x=tail(fit$year,1), y=ci[2], col=2, cex=1.5, pch=16)
   abline(h=1, col='red', lty=3, lwd=2)
 }
 
@@ -124,10 +127,9 @@ plot_ustatus <- function(fit, ylim=NULL){
   plot(x=fit$year, y=fit$year, ylim=ylim, type="n",xlab='Year',
        ylab="U/UMSY")
   trash <- apply(fit$uscaled, 2, function(i) lines(fit$year,y=i, col=rgb(0,0,0,.1)))
-  ci <- qnorm(c(0.025, .975), mean=fit$penalties$harvest.mean, fit$penalties$harvest.sd)
-  lines(x=rep(tail(fit$year,1),2), ci, col=2, lwd=2)
-  points(x=tail(fit$year,1), y=fit$penalties$harvest.mean, col=2, cex=1.5,
-         pch=16)
+  ci <- get_prior(fit, metric='ustatus', interval=TRUE)
+  lines(x=rep(tail(fit$year,1),2), ci[c(1,3)], col=2, lwd=2)
+  points(x=tail(fit$year,1), y=ci[2], col=2, cex=1.5, pch=16)
   abline(h=1, col='red', lty=3, lwd=2)
 }
 
@@ -146,6 +148,10 @@ plot_ssb <- function(fit, ylim=NULL){
   ## Add individual trajectories that were kept
   trash <- apply(fit$ssb, 2, function(i)
     lines(fit$year, y=i, col=rgb(0,0,0,.1)))
+  ## Add confidence interval
+  ci <- get_prior(fit, metric='carry', interval=TRUE)
+  lines(x=rep(head(fit$year,1),2), ci[c(1,3)], col=2, lwd=2)
+  points(x=head(fit$year,1), y=ci[2], col=2, cex=1.5, pch=16)
   ## Add catch
   points(fit$year, fit$Catch, type='h', col='blue', lwd=3)
 }
@@ -197,7 +203,7 @@ plot_recdevs <- function(fit){
 #'   used for all 4 metrics, or a list of ranges. NULL specifies to
 #'   determine the ranges for each metric from the data.
 #' @export
-plot_fit <- function(..., lims=c(0,3)){
+plot_fit <- function(..., names=NULL, lims=c(0,3)){
   axis.col <- gray(.5)
   cex.label <- .7
   box.tmp <- function() box(col=axis.col)

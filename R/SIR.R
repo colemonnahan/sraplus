@@ -7,21 +7,12 @@
 #'   'predictive' internally when querying FishLife.
 #' @param Kprior Maybe a multiplier on K?
 #' @param Kscale Scalar to control the initial biomass which is generated
-#' @param InitialDepletePrior Initial depletion mean
-#' @param InitialDepleteCV Initial depletion CV
-#' @param deplete.mean Final year depletion (not in log space)
-#' @param deplete.cv Final year CV, used as SD
-#' @param deplete.distribution The likelhiood to use, either (1) normal or
-#'   (2) lognormal
 #' @param pct.keep The percentage of "keepers" from the total. Default
 #'   10\%.
-#' @param harvest.sd The mean and SD of the terminal year penalty on
-#'   fishing pressure. If either is NULL it is ignored.
-#' @param harvest.mean Same as harvest.sd but the mean.
-#' @param harvest.distribution Same choice as deplete.distribution.
 #' @param ProcessError Flag for whether to include process error
 #'   deviations, passed on to model. Defaults to TRUE.
-#' @param penalties A list specifying the penalties to use.
+#' @param penalties A list specifying the penalties to use. See details for
+#'   more information.
 #' @param simulation See documentation for AgeModel.
 #' @param AgeVulnOffset Optional parameter for offset of age of
 #'   vulnerability from age of maturity. A value of 0 means knife edge
@@ -31,17 +22,27 @@
 #'   function, so age at vulnerability will vary with it.
 #' @param years Optional vector of years which is used by plotting
 #'   functions. Defaults to 1:length(Catch).
+#' @details The penalties list provides penalties and priors for up to four
+#'   components of the analysis: initial depletion, carrying capacity (K),
+#'   terminal year B/BMSY ('bstatus') and terminal year U/UMSY
+#'   ('ustatus'). The user specifies which distribution to use and two
+#'   distributional arguments for each of these metrics. For instance a
+#'   ustatus~N(.5, .75) would be specified with list elements:
+#'   ustatus.mean=0.5, ustatus.sd=0.75 and ustatus.dist=1. 'dist' options
+#'   are 1=normal, 2=lognormal and 3=uniform. The uniform case passes
+#'   arguments min and max, while the other two the mean and SD.
+#'   deviation, and distribution type. Currently if no initial distribution
+#'   is provided one is calculated internally but this needs to be
+#'   revisiting and thus throws a warning.
 #' @return A list containing depletion, SSB, and harvest rate (U) for
 #'   posterior draws, and a vector of Keepers
 #' @export
 #'
-run.SIR <- function(nrep, Catch, Taxon, InitialDepletePrior,
-                    InitialDepleteCV, Kprior=3, deplete.mean=NULL,
-                    deplete.cv=NULL, Kscale=2,
-                    deplete.distribution=1, harvest.distribution=1,
-                    harvest.mean=NULL, harvest.sd=NULL,
-                    AgeVulnOffset=-1, years=NULL,
-                    pct.keep=10, ProcessError=TRUE, penalties=NULL, simulation=NULL){
+run.SIR <- function(nrep, Catch, Taxon, penalties=NULL, Kprior=3,
+                    Kscale=2, AgeVulnOffset=-1, years=NULL,
+                    pct.keep=10, ProcessError=TRUE, simulation=NULL){
+  check_penalties(penalties)
+  pen <- penalties
   NY <- length(Catch)
   if(is.null(years)) years <- 1:NY
   stopifnot(length(Catch) == length(years))
@@ -54,14 +55,45 @@ run.SIR <- function(nrep, Catch, Taxon, InitialDepletePrior,
   B <- array(dim=(NY+1))  #stock biomass
   ## Recruitment deviations (rows are replicates, columns years)
   recdevs <- matrix(NA, nrow=nrep, ncol=NY)
-  ## #########################
-  ## run iterations
-  ## #########################
-  ## Draw from priors for SIR
-  priors <- draw.priors(N=nrep, InitialDepletePrior=InitialDepletePrior,
-                       InitialDepleteCV=InitialDepleteCV, Kscale=Kscale,
-                       Kprior=Kprior, Catch=Catch, Taxon=Taxon)
+  ## Draw from biological  priors for SIR
+  priors <- draw.priors(N=nrep, penalties=pen, Kscale=Kscale,
+                        Kprior=Kprior, Catch=Catch, Taxon=Taxon)
+  ## Add the intial conditions which are priors on K and depletion
+  if(pen$initial.dist==2){
+    ## lognormal
+    InitialPrior <-
+      rlnorm(nrep, meanlog=pen$initial.mean, sdlog=pen$initial.sd)
+  } else {
+    ## normal
+    InitialPrior <-
+      rnorm(nrep, mean=pen$initial.mean, sd=pen$initial.sd)
+  }
+  ## Carrying capacity (need to rename this at some point)
+  if(is.null(pen$carry.dist)){
+    message("No prior specified for K so generating one from max catch")
+    ## catch info
+    Cmax <- max(Catch,na.rm=TRUE)
+    ## carrying capacity prior
+    ## correlation between maximum catch and MSY
+    Carry <- Kprior*Cmax
+    Cprior <- runif(nrep,min=Carry/Kscale,max=Carry*Kscale)
+    pen$carry.min <- Carry/Kscale; pen$carry.max <- Carry*Kscale;
+    pen$carry.dist <- 3 # uniform
+    check_penalties(pen)
+  } else if (pen$carry.dist==1){
+    Cprior <- rnorm(nrep, pen$carry.mean, pen$carry.sd)
+  } else if(pen$carry.dist==2){
+    Cprior <- rlnorm(nrep, pen$carry.mean, pen$carry.sd)
+  }
+  if(any(InitialPrior<0))
+    warning('Some initial depletion values were negative')
+  if(any(Cprior<0))
+    warning('Some carrying capacity values were negative')
+  ## Tack these onto the biological priors
+  priors$draws$Cprior <- Cprior
+  priors$draws$InitialPrior <- InitialPrior
   draws <- priors$draws
+  ## Start of SIR
   for (irep in 1:nrep){   ##loop over replicates
     ## set priors
     InitialDeplete <- draws[irep, 'InitialPrior']
@@ -96,14 +128,16 @@ run.SIR <- function(nrep, Catch, Taxon, InitialDepletePrior,
     ## vector with NA's, so catch those here and assign a zero likelihood
     if(all(!is.na(pop))){
       loglike <- 0
-      if(!is.null(deplete.mean) & !is.null(deplete.cv)){
-        x <- ifelse(deplete.distribution==1, bscaled[NY], log(bscaled[NY]))
-        loglike <- loglike + dnorm(x,mean=deplete.mean,sd=deplete.cv, log=TRUE)
+      if(!is.null(pen$bstatus.dist)){
+        x <- ifelse(pen$bstatus.dist==1, bscaled[NY], log(bscaled[NY]))
+        loglike <- loglike +
+          dnorm(x,mean=pen$bstatus.mean, sd=pen$bstatus.sd, log=TRUE)
       }
       ## If specified, include penalty for harvest rate in final year
-      if(!is.null(harvest.mean) & !is.null(harvest.sd)){
-        x <- ifelse(harvest.distribution==1, uscaled[NY], log(uscaled[NY]))
-        loglike <- loglike + dnorm(x, mean=harvest.mean, sd=harvest.sd, log=TRUE)
+      if(!is.null(pen$ustatus.dist)){
+        x <- ifelse(pen$ustatus.dist==1, uscaled[NY], log(uscaled[NY]))
+        loglike <- loglike +
+          dnorm(x, mean=pen$ustatus.mean, sd=pen$ustatus.sd, log=TRUE)
       }
       LikeStore[irep] <- exp(loglike)
     } # otherwise it is 0 by default
@@ -144,13 +178,9 @@ run.SIR <- function(nrep, Catch, Taxon, InitialDepletePrior,
   ## }
   K <- get.keepers(Nkeep, CumLike, BreakPoints)
   print(paste0("# crashed=", sum(crashed),";  # unique draws=",length(unique(K))))
-  penalties <- list(deplete.mean=deplete.mean,
-                deplete.cv=deplete.cv, deplete.distribution,
-                harvest.mean=harvest.mean,
-                harvest.sd=harvest.sd, harvest.distribution=harvest.distribution)
   fit <- list(years=years, ssb=Bstore[,K], U=Ustore[,K], depletion=Dstore[,K],
               umsy=umsy[K], cmsy=cmsy[K], bmsy=bmsy[K], uscaled=Uscaledstore[,K],
-              bscaled=Bscaledstore[,K], recdevs=recdevs, penalties=penalties,
+              bscaled=Bscaledstore[,K], recdevs=recdevs, penalties=pen,
               Keepers=K, crashed=crashed, likes=LikeStore, Catch=Catch,
               draws=draws, Taxon=priors$Taxon)
   fit <- construct_srafit(fit)

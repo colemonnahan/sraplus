@@ -23,6 +23,22 @@ is.srafit <- function(x) inherits(x, "srafit")
 summary.srafit <- function(object, ...){
   ## for now just print it
   print.srafit(object, ...)
+  priors <- data.frame(t(sapply(c('carry', 'initial', 'ustatus', 'bstatus'), function(m)
+    get_prior(object, metric=m))))
+  names(priors) <- c('2.5%', '50%', '97.5%')
+  cat('\nPrior intervals:\n')
+  print(priors, digits=2)
+  cat('\n')
+  probs <- c(0.025, .5, .975)
+  keep <- object$Keepers
+  carry <- quantile(object$draws$Cprior[keep], probs)
+  initial <- quantile(object$draws$InitialPrior[keep], probs)
+  uscaled <- quantile(object$uscaled[length(object$years),], probs)
+  bscaled <- quantile(object$bscaled[length(object$years),], probs)
+  posteriors <- rbind(carry, initial, uscaled, bscaled)
+  cat('Posterior intervals:\n')
+  print(posteriors, digits=2)
+  cat('\n')
 }
 
 #' Print method for class 'srafit'
@@ -30,7 +46,7 @@ summary.srafit <- function(object, ...){
 #' @param ... Other arguments to be passed
 #' @export
 print.srafit <- function(x, ...){
-  cat(paste("Objectted object from sraplus for species:\n"))
+  cat(paste("Fitted object from sraplus for species:\n"))
   cat(x$Taxon, "\n")
   cat('With', length(unique(x$Keepers)), 'unique posterior draws\n')
 }

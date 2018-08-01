@@ -4,11 +4,9 @@
 \alias{run.SIR}
 \title{Run the SIR algorithm for a draws and stock (temporary)}
 \usage{
-run.SIR(nrep, Catch, Taxon, InitialDepletePrior, InitialDepleteCV, Kprior = 3,
-  deplete.mean = NULL, deplete.cv = NULL, Kscale = 2,
-  deplete.distribution = 1, harvest.distribution = 1, harvest.mean = NULL,
-  harvest.sd = NULL, AgeVulnOffset = -1, years = NULL, pct.keep = 10,
-  ProcessError = TRUE, penalties = NULL, simulation = NULL)
+run.SIR(nrep, Catch, Taxon, penalties = NULL, Kprior = 3, Kscale = 2,
+  AgeVulnOffset = -1, years = NULL, pct.keep = 10, ProcessError = TRUE,
+  simulation = NULL)
 }
 \arguments{
 \item{nrep}{Number of replicates to run.}
@@ -19,27 +17,12 @@ run.SIR(nrep, Catch, Taxon, InitialDepletePrior, InitialDepleteCV, Kprior = 3,
 'Order', 'Family', 'Genus', 'Species'. Any blanks will be converted to
 'predictive' internally when querying FishLife.}
 
-\item{InitialDepletePrior}{Initial depletion mean}
-
-\item{InitialDepleteCV}{Initial depletion CV}
+\item{penalties}{A list specifying the penalties to use. See details for
+more information.}
 
 \item{Kprior}{Maybe a multiplier on K?}
 
-\item{deplete.mean}{Final year depletion (not in log space)}
-
-\item{deplete.cv}{Final year CV, used as SD}
-
 \item{Kscale}{Scalar to control the initial biomass which is generated}
-
-\item{deplete.distribution}{The likelhiood to use, either (1) normal or
-(2) lognormal}
-
-\item{harvest.distribution}{Same choice as deplete.distribution.}
-
-\item{harvest.mean}{Same as harvest.sd but the mean.}
-
-\item{harvest.sd}{The mean and SD of the terminal year penalty on
-fishing pressure. If either is NULL it is ignored.}
 
 \item{AgeVulnOffset}{Optional parameter for offset of age of
 vulnerability from age of maturity. A value of 0 means knife edge
@@ -57,8 +40,6 @@ functions. Defaults to 1:length(Catch).}
 \item{ProcessError}{Flag for whether to include process error
 deviations, passed on to model. Defaults to TRUE.}
 
-\item{penalties}{A list specifying the penalties to use.}
-
 \item{simulation}{See documentation for AgeModel.}
 }
 \value{
@@ -67,4 +48,18 @@ A list containing depletion, SSB, and harvest rate (U) for
 }
 \description{
 Run the SIR algorithm for a draws and stock (temporary)
+}
+\details{
+The penalties list provides penalties and priors for up to four
+  components of the analysis: initial depletion, carrying capacity (K),
+  terminal year B/BMSY ('bstatus') and terminal year U/UMSY
+  ('ustatus'). The user specifies which distribution to use and two
+  distributional arguments for each of these metrics. For instance a
+  ustatus~N(.5, .75) would be specified with list elements:
+  ustatus.mean=0.5, ustatus.sd=0.75 and ustatus.dist=1. 'dist' options
+  are 1=normal, 2=lognormal and 3=uniform. The uniform case passes
+  arguments min and max, while the other two the mean and SD.
+  deviation, and distribution type. Currently if no initial distribution
+  is provided one is calculated internally but this needs to be
+  revisiting and thus throws a warning.
 }

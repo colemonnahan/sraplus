@@ -2,8 +2,7 @@
 #' Draw samples from the prior distribution as defined by biological
 #'   parameters from FishLife and initial depletion distribution.
 #' @param N Number of draws
-#' @param InitialDepletePrior Mean of initial lognormal depletion penalty
-#' @param InitialDepleteCV CV of intial lognormal depletion penalty
+#' @param penalties A list of penalties, see ?run.SIR for more information.
 #' @param Kprior Maybe a multiplier on K?
 #' @param Catch Vector of catch
 #' @param Taxon A list with taxonomic information, including 'Class',
@@ -14,20 +13,8 @@
 #' @return A list that contains 'draws', a data.frame with N random draws from all
 #'   priors, and 'Taxon' which is a character string that is returned from
 #'   the FishLife query match.
-draw.priors <- function(N, InitialDepletePrior, InitialDepleteCV, Kprior,
+draw.priors <- function(N, penalties, Kprior,
                         Catch, Taxon, Kscale=2){
-  ## initial depletion prior
-  ## Switched to a lognormal prior on intial depletion so that we're not
-  ## generating negative starting values for biomass. Assuming that the
-  ## values given are mean and CV and calculating the SD from that.
-  InitialPrior <-
-    rlnorm(N, log(InitialDepletePrior), sqrt(log(InitialDepleteCV^2+1)))
-  ## catch info
-  Cmax <- max(Catch,na.rm=TRUE)
-  ## carrying capacity prior
-  ## correlation between maximum catch and MSY
-  Carry <- Kprior*Cmax
-  Cprior <- runif(N,min=Carry/Kscale,max=Carry*Kscale)
   ## #######################
   ## priors from FishLife
   ## #######################
@@ -63,9 +50,7 @@ draw.priors <- function(N, InitialDepletePrior, InitialDepleteCV, Kprior,
     mutate("lwb" = 3.04)  %>% ## from Froese, Thorson, and Reyes meta-analysis, mean value for all fish
     mutate("lwa" = Winfinity / (Loo ^ lwb)) %>%
     mutate("h"=  0.2+ 0.8*(1/(1+exp(-logitbound_h)))) %>%
-    mutate("Sigma"=exp(ln_var)) %>%
-    mutate("Cprior"=Cprior) %>%
-    mutate("InitialPrior"=InitialPrior)
+    mutate("Sigma"=exp(ln_var))
   draws <- draws_mvn
   draws$logitbound_h <- draws$ln_var <- NULL
   if(any(draws$Sigma > 1.5)){

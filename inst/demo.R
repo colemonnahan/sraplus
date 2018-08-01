@@ -3,8 +3,9 @@
 library(FishLife)
 library(mvtnorm)
 library(dplyr)
-devtools::document('..')
-devtools::install('C:/Users/Cole/sraplus', quick=TRUE)
+## devtools::document('..')
+## devtools::install('C:/Users/Cole/sraplus', quick=TRUE)
+devtools::load_all('C:/Users/Cole/sraplus')
 library(sraplus)
 library(ggplot2)
 ## You need to put the file "Return.RData" in the "data" folder of the
@@ -13,18 +14,20 @@ library(ggplot2)
 data(Return)
 
 ## A simulated stock history for demonstration purposes
-
-## settings
-nrep <- 10000
+nrep <- 20000 # total reps, 10% will be kept
 set.seed(2323)
 Catch <- runif(11, 50000, 300000)
 Taxon <- c(Class="Actinopterygii", Order="Perciformes",
            Family="Scombridae", Genus="Thunnus", Species="albacares")
+## Define the penalties. Defaults to a uniform carrying capacity
+## distribution that is based on max catch (needs to be updated). bstatus =
+## terminal B/BMSY; ustatus=terminal U/UMSY; initial=initial depletion
+pen <- list(bstatus.mean=0, bstatus.sd=0.5, bstatus.dist=2,
+            ustatus.mean=0, ustatus.sd=0.25, ustatus.dist=2,
+            initial.mean=0, initial.sd=.3, initial.dist=2)
 ## Run SIR to get posterior samples
-fit <- run.SIR(nrep=nrep, Catch=Catch, Taxon=Taxon, InitialDepletePrior=.8,
-               InitialDepleteCV=1, deplete.mean=2, deplete.cv=0.5,
-               harvest.mean=0.5, harvest.sd=0.5,
-               AgeVulnOffset=-2, years=2005:2015)
+fit <- run.SIR(nrep=nrep, Catch=Catch, Taxon=Taxon, penalties=pen,
+                years=2005:2015)
 
 ## Quick time series plots
 par(mfrow=c(3,1))
@@ -32,28 +35,33 @@ plot_ssb(fit)
 plot_bstatus(fit)
 plot_ustatus(fit)
 
-## plots of MSY reference points and NLL
-plot_reference(fit)
-
-## Look at biological prior vs posterior patterns
+## Look at biological prior vs posterior patterns, this documentation and
+## function need updating. Red points are crashed, black points not kept,
+## and green kept.
 plot_draws(fit)
 
-## Run a second fit and compare the differences
-fit2 <- run.SIR(nrep=nrep, Catch=Catch, Taxon=Taxon, InitialDepletePrior=.8,
-                InitialDepleteCV=1, deplete.mean=1.5, deplete.cv=0.3,
-                harvest.mean=0.5, harvest.sd=0.1,
-               AgeVulnOffset=-2, years=2005:2015)
+## Run an arbitrary second fit and compare the differences.
+pen2 <- list(bstatus.mean=0, bstatus.sd=0.75, bstatus.dist=2,
+            ustatus.mean=-.5, ustatus.sd=0.25, ustatus.dist=2,
+            initial.mean=0, initial.sd=.2, initial.dist=2,
+            ## now we specify a lognormal distribution for K explicitly
+            carry.mean=13.8, carry.sd=.2, carry.dist=2)
+## Also change the AgeVulnOffset from default of -1
+fit2 <- run.SIR(nrep=nrep, Catch=Catch, Taxon=Taxon,
+                penalties=pen2, AgeVulnOffset=0, years=2005:2015)
 
-## Compare two distinct fits (or more)
-plot_terminal(fit, fit2)
+## Compare prior and posterior for two distinct fits (or more)
+plot_penalties(fit, fit2)
+## plots of MSY reference points and NLL
+plot_reference(fit, fit2)
 
 ## The return is an object of class 'srafit'. Not heavily used for now but
 ## probably will be useful later.
 class(fit)
 print(fit)
+## credible intervals for prior and posterior on key management targets
 summary(fit)
 
-## Plot management comparisons
+## Plot management comparisons using specially-designed function.
 plot_fit(fit, fit2)
-
 
