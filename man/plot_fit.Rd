@@ -4,19 +4,19 @@
 \alias{plot_fit}
 \title{Plot management quantities for one or more fits}
 \usage{
-plot_fit(..., lims = c(0, 3))
+plot_fit(..., names = NULL, lims = c(0, 3))
 }
 \arguments{
 \item{...}{A series of fits as returned by run.SIR}
+
+\item{names}{An optional character string with length equal to the
+number of fits, used to identify fits on the plot.}
 
 \item{lims}{The limits for metrics. A single range can be passed and
 used for all 4 metrics, or a list of ranges. NULL specifies to
 determine the ranges for each metric from the data.}
 
 \item{fit}{A returned list from run.SIR}
-
-\item{names}{An optional character string with length equal to the
-number of fits, used to identify fits on the plot.}
 
 \item{plot}{Boolean for whether to print the plot.}
 }

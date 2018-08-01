@@ -5,15 +5,12 @@
 \title{Draw samples from the prior distribution as defined by biological
   parameters from FishLife and initial depletion distribution.}
 \usage{
-draw.priors(N, InitialDepletePrior, InitialDepleteCV, Kprior, Catch, Taxon,
-  Kscale = 2)
+draw.priors(N, penalties, Kprior, Catch, Taxon, Kscale = 2)
 }
 \arguments{
 \item{N}{Number of draws}
 
-\item{InitialDepletePrior}{Mean of initial lognormal depletion penalty}
-
-\item{InitialDepleteCV}{CV of intial lognormal depletion penalty}
+\item{penalties}{A list of penalties, see ?run.SIR for more information.}
 
 \item{Kprior}{Maybe a multiplier on K?}
 
