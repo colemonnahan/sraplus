@@ -67,7 +67,7 @@ check_penalties <- function(penalties){
 get_prior <- function(fit, metric, interval=TRUE, percentile=.95,
                       n.points=1000){
   pen <- fit$penalties
-  metric <- match.arg(metric, choices=c('carry', 'ustatus', 'bstatus'))
+  metric <- match.arg(metric, choices=c('carry', 'initial', 'ustatus', 'bstatus'))
   if(metric == 'carry' & pen$carry.dist==3){
     CI <- c(pen$carry.min, (pen$carry.max+pen$carry.min)/2, pen$carry.max)
     xseq <- seq(pen$carry.min, to=pen$carry.max, len=n.points)
@@ -83,6 +83,9 @@ get_prior <- function(fit, metric, interval=TRUE, percentile=.95,
     } else if(metric == 'carry'){
       mu <- pen$carry.mean; sigma <- pen$carry.sd
       dist <- pen$carry.dist
+    } else if(metric == 'initial'){
+      mu <- pen$initial.mean; sigma <- pen$initial.sd
+      dist <- pen$initial.dist
     } else {
       stop("Invalid metric option")
     }
