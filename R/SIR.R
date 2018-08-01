@@ -69,7 +69,7 @@ run.SIR <- function(nrep, Catch, Taxon, penalties=NULL, Kprior=3,
       rnorm(nrep, mean=pen$initial.mean, sd=pen$initial.sd)
   }
   ## Carrying capacity (need to rename this at some point)
-  if(is.null(pen$k.dist)){
+  if(is.null(pen$carry.dist)){
     message("No prior specified for K so generating one from max catch")
     ## catch info
     Cmax <- max(Catch,na.rm=TRUE)
@@ -77,13 +77,13 @@ run.SIR <- function(nrep, Catch, Taxon, penalties=NULL, Kprior=3,
     ## correlation between maximum catch and MSY
     Carry <- Kprior*Cmax
     Cprior <- runif(nrep,min=Carry/Kscale,max=Carry*Kscale)
-    pen$k.min <- Carry/Kscale; pen$k.max <- Carry*Kscale;
-    pen$k.dist <- 3 # uniform
+    pen$carry.min <- Carry/Kscale; pen$carry.max <- Carry*Kscale;
+    pen$carry.dist <- 3 # uniform
     check_penalties(pen)
-  } else if (pen$k.dist==1){
-    Cprior <- rnorm(nrep, pen$k.mean, pen$k.sd)
-  } else if(pen$k.dist==2){
-    Cprior <- rlnorm(nrep, pen$k.mean, pen$k.sd)
+  } else if (pen$carry.dist==1){
+    Cprior <- rnorm(nrep, pen$carry.mean, pen$carry.sd)
+  } else if(pen$carry.dist==2){
+    Cprior <- rlnorm(nrep, pen$carry.mean, pen$carry.sd)
   }
   if(any(InitialPrior<0))
     warning('Some initial depletion values were negative')
