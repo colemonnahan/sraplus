@@ -34,14 +34,15 @@ plot_penalties <- function(..., names=NULL, plot=TRUE,
       ii <- get_prior(fits[[i]], metric='initial', interval=FALSE, percentile=percentile)
       pri[[i]] <- data.frame(fit=names[i], metric='initial', prior=ii[,1], density=ii[,2])
     }
-    if(!is.null(fits[[i]]$penalties$bstatus.dist)){
-      bb <- get_prior(fits[[i]], metric='bstatus', interval=FALSE, percentile=percentile)
-      prb[[i]] <- data.frame(fit=names[i], metric='bstatus', prior=bb[,1], density=bb[,2])
-    }
     ## Same for U/UMSY
     if(!is.null(fits[[i]]$penalties$ustatus.dist)){
       uu <- get_prior(fits[[i]], metric='ustatus', interval=FALSE, percentile=percentile)
       pru[[i]] <- data.frame(fit=names[i], metric='ustatus', prior=uu[,1], density=uu[,2])
+    }
+    ## B/BMSY
+    if(!is.null(fits[[i]]$penalties$bstatus.dist)){
+      bb <- get_prior(fits[[i]], metric='bstatus', interval=FALSE, percentile=percentile)
+      prb[[i]] <- data.frame(fit=names[i], metric='bstatus', prior=bb[,1], density=bb[,2])
     }
   } ## end loop over fits
   ## Massage these into ggplot format
