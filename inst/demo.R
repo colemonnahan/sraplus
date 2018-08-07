@@ -1,11 +1,13 @@
 ### This file provides a quick demonstration of the package using a
-### hard-coded example.
+### hard-coded example. In development and subject to change!
+
+## devtools::document('..')
+## devtools::install('C:/Users/Cole/sraplus', quick=TRUE)
+## devtools::load_all('C:/Users/Cole/sraplus')
+devtools::install_github(repo='colemonnahan/sraplus', quick=TRUE)
 library(FishLife)
 library(mvtnorm)
 library(dplyr)
-## devtools::document('..')
-## devtools::install('C:/Users/Cole/sraplus', quick=TRUE)
-devtools::load_all('C:/Users/Cole/sraplus')
 library(sraplus)
 library(ggplot2)
 ## You need to put the file "Return.RData" in the "data" folder of the
