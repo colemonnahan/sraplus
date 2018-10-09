@@ -4,7 +4,7 @@
 ## devtools::document('..')
 ## devtools::install('C:/Users/Cole/sraplus', quick=TRUE)
 ## devtools::load_all('C:/Users/Cole/sraplus')
-devtools::install_github(repo='colemonnahan/sraplus', quick=TRUE)
+# devtools::install_github(repo='colemonnahan/sraplus', quick=TRUE)
 library(FishLife)
 library(mvtnorm)
 library(dplyr)
@@ -13,7 +13,7 @@ library(ggplot2)
 ## You need to put the file "Return.RData" in the "data" folder of the
 ## package. It's too large to include it and should be removed later. Comes
 ## from FishLife
-data(Return)
+# data(Return)
 
 ## A simulated stock history for demonstration purposes
 nrep <- 20000 # total reps, 10% will be kept

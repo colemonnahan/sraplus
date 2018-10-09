@@ -164,7 +164,7 @@ run.SIR <- function(nrep, Catch, Taxon, penalties=NULL, Kprior=3,
     ## indices for which draws were "kept"
     Keepers <- rep(NA, len=Nkeep)
     for(i in 1:Nkeep){
-      Keepers[i] <- which(CumLike > BreakPoints[i])[1]-1
+      Keepers[i] <- which(CumLike > BreakPoints[i])[1]-1 # since that zero was tacked on
     }
     return(sort(Keepers))
   }
@@ -176,7 +176,16 @@ run.SIR <- function(nrep, Catch, Taxon, penalties=NULL, Kprior=3,
   ##   Nhits <- length(j)
   ##   if (Nhits>0) {Keepers[k:(k+Nhits-1)] <-  i; k <- k+Nhits}
   ## }
-  K <- get.keepers(Nkeep, CumLike, BreakPoints)
+
+  foo <- function(break_point, cumu_like){
+
+    out <- which(cumu_like > break_point)[1] - 1
+
+  }
+
+  K <- purrr::map_dbl(BreakPoints, foo, cumu_like = CumLike)
+
+  # K <- get.keepers(Nkeep, CumLike, BreakPoints)
   print(paste0("# crashed=", sum(crashed),";  # unique draws=",length(unique(K))))
   fit <- list(years=years, ssb=Bstore[,K], U=Ustore[,K], depletion=Dstore[,K],
               umsy=umsy[K], cmsy=cmsy[K], bmsy=bmsy[K], uscaled=Uscaledstore[,K],

@@ -85,8 +85,9 @@ AgeModel <- function(Catch, AgeMat, Steep, NatMort, AgeMax,
     ## vulnerable biomass
     Vpop[y] <- sum(num*vuln*Weight)
     ## if simulating a population, calculate Catch
-    if(use.sim)
+    if(use.sim){
       Catch[y] <- simulation$FishMort*Vpop[y]
+    }
     ## harvest rate based on catch
     hr <- Catch[y]/Vpop[y]
     ## hr <- min(.9,Catch[y]/Vpop)

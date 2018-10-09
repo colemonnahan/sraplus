@@ -21,7 +21,7 @@ draw.priors(N, penalties, Kprior, Catch, Taxon, Kscale = 2)
 'predictive' internally when querying FishLife.}
 
 \item{Kscale}{Scalar to control the initial biomass which is generated
-as runif(N, Carry/Kscale, Carry*Kscale) where Carry=Kprior*max(Catch).}
+as runif(N, Carry/Kscale, CarryxKscale) where Carry=Kpriorxmax(Catch).}
 }
 \value{
 A list that contains 'draws', a data.frame with N random draws from all
