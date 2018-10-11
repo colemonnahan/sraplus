@@ -13,7 +13,7 @@ library(ggplot2)
 ## You need to put the file "Return.RData" in the "data" folder of the
 ## package. It's too large to include it and should be removed later. Comes
 ## from FishLife
-# data(Return)
+data(Return)
 
 ## A simulated stock history for demonstration purposes
 nrep <- 20000 # total reps, 10% will be kept
@@ -25,7 +25,7 @@ Taxon <- c(Class="Actinopterygii", Order="Perciformes",
 ## distribution that is based on max catch (needs to be updated). bstatus =
 ## terminal B/BMSY; ustatus=terminal U/UMSY; initial=initial depletion
 pen <- list(bstatus.mean=0, bstatus.sd=0.5, bstatus.dist=2,
-            ustatus.mean=0, ustatus.sd=0.25, ustatus.dist=2,
+            ustatus.mean=0.5, ustatus.sd=0.25, ustatus.dist=2,
             initial.mean=0, initial.sd=.3, initial.dist=2)
 ## Run SIR to get posterior samples
 fit <- run.SIR(nrep=nrep, Catch=Catch, Taxon=Taxon, penalties=pen,
