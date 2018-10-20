@@ -44,7 +44,7 @@ plot_draws(fit)
 
 ## Run an arbitrary second fit and compare the differences.
 pen2 <- list(bstatus.mean=0, bstatus.sd=0.75, bstatus.dist=2,
-            ustatus.mean=-.5, ustatus.sd=0.25, ustatus.dist=2,
+            ustatus.mean= 1.5, ustatus.sd=0.025, ustatus.dist=2,
             initial.mean=0, initial.sd=.2, initial.dist=2,
             ## now we specify a lognormal distribution for K explicitly
             carry.mean=13.8, carry.sd=.2, carry.dist=2)
