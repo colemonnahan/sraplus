@@ -43,14 +43,17 @@ plot_ustatus(fit)
 plot_draws(fit)
 
 ## Run an arbitrary second fit and compare the differences.
-pen2 <- list(bstatus.mean=0, bstatus.sd=0.75, bstatus.dist=2,
-            ustatus.mean= 1.5, ustatus.sd=0.025, ustatus.dist=2,
-            initial.mean=0, initial.sd=.2, initial.dist=2,
+
+
+
+pen2 <- list(bstatus.mean=log(1), bstatus.sd=0.5, bstatus.dist=2,
+            ustatus.mean= log(1.5), ustatus.sd=0.25, ustatus.dist=2,
+            initial.mean=log(0.5), initial.sd=.3, initial.dist=2 ,
             ## now we specify a lognormal distribution for K explicitly
             carry.mean=13.8, carry.sd=.2, carry.dist=2)
 ## Also change the AgeVulnOffset from default of -1
 fit2 <- run.SIR(nrep=nrep, Catch=Catch, Taxon=Taxon,
-                penalties=pen2, AgeVulnOffset=0, years=2005:2015)
+                penalties=pen2, years=2005:2015, AgeVulnOffset = -1)
 
 ## Compare prior and posterior for two distinct fits (or more)
 plot_penalties(fit, fit2)

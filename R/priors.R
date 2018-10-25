@@ -34,7 +34,7 @@ draw.priors <- function(N, penalties, Kprior,
     ParentChild_gz = Return$ParentChild_gz
   )$match_taxonomy
   ## find means and covariance matrix
-  Which <- grep(sp[1], Return$ParentChild_gz[, "ChildName"])
+  Which <- grep(sp[1], Return$ParentChild_gz[, "ChildName"])[1]
   Mean <- Return$beta_gv[Which, ]
   Cov <- Return$Cov_gvv[Which, , ]
   ##------------ deviates from multivariate normal -------------##
