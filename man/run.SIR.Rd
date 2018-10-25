@@ -5,8 +5,8 @@
 \title{Run the SIR algorithm for a draws and stock (temporary)}
 \usage{
 run.SIR(nrep, Catch, Taxon, penalties = NULL, Kprior = 3, Kscale = 2,
-  AgeVulnOffset = -1, years = NULL, pct.keep = 10, ProcessError = TRUE,
-  simulation = NULL)
+  AgeVulnOffset = -1, years = NULL, pct.keep = 10,
+  ProcessError = TRUE, simulation = NULL)
 }
 \arguments{
 \item{nrep}{Number of replicates to run.}

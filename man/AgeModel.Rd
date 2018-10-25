@@ -4,8 +4,9 @@
 \alias{AgeModel}
 \title{Stochastic SRA to calculate the trajectory given parameters}
 \usage{
-AgeModel(Catch, AgeMat, Steep, NatMort, AgeMax, Carry, Weight, InitialDeplete,
-  Sigma, AgeVulnOffset = -1, ProcessError = TRUE, simulation = NULL)
+AgeModel(Catch, AgeMat, Steep, NatMort, AgeMax, Carry, Weight,
+  InitialDeplete, Sigma, AgeVulnOffset = -1, ProcessError = TRUE,
+  simulation = NULL)
 }
 \arguments{
 \item{Catch}{To do}
