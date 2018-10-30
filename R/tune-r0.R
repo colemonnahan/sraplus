@@ -6,7 +6,7 @@ tune_r0 <-
            weight,
            mature,
            sigma = 0.2,
-           kform = "ssb",
+           carry_form = "ssb",
            rcorrect = FALSE) {
 
     if (rcorrect == T){
@@ -20,7 +20,7 @@ tune_r0 <-
 
     n0[max_age] <- n0[max_age - 1] * (exp(-m) / (1 - exp(-m)))
 
-    if (kform == "ssb") {
+    if (carry_form == "ssb") {
       b0 <- sum(n0 * weight * mature)
     } else{
       b0 <- sum(n0 * weight)

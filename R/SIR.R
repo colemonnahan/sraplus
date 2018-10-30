@@ -48,7 +48,8 @@ run.SIR <- function(nrep,
                     years = NULL,
                     pct.keep = 10,
                     ProcessError = TRUE,
-                    simulation = NULL) {
+                    simulation = NULL,
+                    keep_recdevs = FALSE) {
   check_penalties(penalties)
   pen <- penalties
   NY <- length(Catch)
@@ -154,6 +155,9 @@ run.SIR <- function(nrep,
     Deplete <- pop / Carry
     ## Calculate U/UMSY and B/BMSY by year
     uscaled <- out$hr / out$umsy
+
+    f_scaled <- out$f_y / out$fmsy
+
     bscaled <- out$Vpop / out$bmsy
     ## This is the final year "penalty" on an assumed level of depletion or
     ## harvest rate (or both). If the biomass crashes it will return a
@@ -178,6 +182,18 @@ run.SIR <- function(nrep,
             x,
             mean = pen$ustatus.mean,
             sd = pen$ustatus.sd,
+            log = TRUE
+          )
+      }
+
+      if (!is.null(pen$fstatus.dist)) {
+        print("hello")
+        x <- ifelse(pen$fstatus.dist == 1, f_scaled[NY], log(f_scaled[NY]))
+        loglike <- loglike +
+          dnorm(
+            x,
+            mean = pen$fstatus.mean,
+            sd = pen$fstatus.sd,
             log = TRUE
           )
       }
@@ -245,7 +261,7 @@ run.SIR <- function(nrep,
       bmsy = bmsy[K],
       uscaled = Uscaledstore[, K],
       bscaled = Bscaledstore[, K],
-      recdevs = recdevs,
+      recdevs = ifelse(keep_recdevs,recdevs,NA),
       penalties = pen,
       Keepers = K,
       crashed = crashed,

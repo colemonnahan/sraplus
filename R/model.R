@@ -29,7 +29,8 @@ AgeModel <- function(Catch,
                      Sigma,
                      AgeVulnOffset = -1,
                      ProcessError = TRUE,
-                     simulation = NULL) {
+                     simulation = NULL,
+                     carry_form = "ssb") {
 
   stopifnot(AgeMat > 0)
   AgeVuln <- AgeMat + AgeVulnOffset
@@ -74,7 +75,8 @@ AgeModel <- function(Catch,
       m = NatMort,
       mature = mature,
       weight = Weight,
-      max_age = AgeMax
+      max_age = AgeMax,
+      carry_form = carry_form
     )
 
   ## per recruit
@@ -275,7 +277,9 @@ AgeModel <- function(Catch,
       pop = pop,
       Vpop = Vpop,
       hr = hrstore,
-      umsy = exp(fit$par),
+      f_y = f_y,
+      umsy = 1 - exp(-exp(fit$par)),
+      fmsy = exp(fit$par),
       cmsy = -fit$objective,
       bmsy = bmsy,
       crashed = crashed,
