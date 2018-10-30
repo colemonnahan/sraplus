@@ -159,6 +159,9 @@ run.SIR <- function(nrep,
     f_scaled <- out$f_y / out$fmsy
 
     bscaled <- out$Vpop / out$bmsy
+
+    pchange_effort <- dplyr::lead(out$f_y) / out$f_y
+
     ## This is the final year "penalty" on an assumed level of depletion or
     ## harvest rate (or both). If the biomass crashes it will return a
     ## vector with NA's, so catch those here and assign a zero likelihood
@@ -187,7 +190,6 @@ run.SIR <- function(nrep,
       }
 
       if (!is.null(pen$fstatus.dist)) {
-        print("hello")
         x <- ifelse(pen$fstatus.dist == 1, f_scaled[NY], log(f_scaled[NY]))
         loglike <- loglike +
           dnorm(
@@ -197,6 +199,23 @@ run.SIR <- function(nrep,
             log = TRUE
           )
       }
+
+      if (!is.null(pen$pchange_effort_dist)) {
+        if (pen$pchange_effort_dist == 1) {
+          x <- pchange_effort[1:(NY-1)]
+        } else {
+
+          x <-  log(pchange_effort[1:(NY-1)])
+        }
+        loglike <- loglike +
+          sum(dnorm(
+            x,
+            mean = pen$pchange_effort_mean,
+            sd = pen$pchange_effort_sd,
+            log = TRUE
+          ), na.rm = TRUE) # important to allow for missing years of effort data
+      }
+
       LikeStore[irep] <- exp(loglike)
     } # otherwise it is 0 by default
     Bstore[, irep] <- pop
