@@ -131,13 +131,32 @@ AgeModel <- function(Catch,
     }
     ## harvest rate based on catch
 
-    if (Catch[y] >= sum(num * vuln * Weight)) {
+    if (Catch[y] >=  Vpop[y]) {
       break
     }
 
+    f_guess <- -log(1 - Catch[y] / Vpop[y])
+
+    browser()
+
+
+    baranov_model <-
+      TMB::MakeADFun(
+        list( m = NatMort,
+              sel = vuln,
+              b_a = num * Weight,
+              catch = Catch[y]),
+        list(log_f = log(f_guess)),
+        DLL = "baranov")
+
+    fitted_f <- nlminb(baranov_model$par,
+                       baranov_model$fn,
+                       baranov_model$gr)
+
+
     fitted_f <-
       nlminb(
-        log(NatMort),
+        log(f_guess),
         baranov_catches,
         m = NatMort,
         sel = vuln,

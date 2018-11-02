@@ -4,8 +4,8 @@
 \alias{get_eq_catch}
 \title{get equilibrium catch}
 \usage{
-get_eq_catch(log_f, rzeroC, NatMort, maxage, vuln, Weight, alpha, betav,
-  biomass = FALSE)
+get_eq_catch(log_f, rzeroC, NatMort, maxage, vuln, Weight, mature, alpha,
+  betav, biomass = FALSE)
 }
 \arguments{
 \item{log_f}{log fishing mortality}

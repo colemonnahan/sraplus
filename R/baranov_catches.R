@@ -13,10 +13,12 @@
 baranov_catches <- function(log_f, m, sel, b_a, catch, use = 1) {
   f <- exp(log_f)
 
-  catch_hat <-
-    sum((f * sel) / (f * sel + m) * b_a * (1 - exp(-(f * sel + m))))
+  f_at_a <- f * sel
 
-  ss <- (catch - catch_hat) ^ 2
+  catch_hat <-
+    sum((f_at_a) / (f_at_a + m) * b_a * (1 - exp(-(f_at_a + m))))
+
+  ss <- ((catch) - (catch_hat)) ^ 2
 
   if (use == 1) {
     out <- ss

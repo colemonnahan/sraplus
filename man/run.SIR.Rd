@@ -6,7 +6,7 @@
 \usage{
 run.SIR(nrep, Catch, Taxon, penalties = NULL, Kprior = 3, Kscale = 2,
   AgeVulnOffset = -1, years = NULL, pct.keep = 10,
-  ProcessError = TRUE, simulation = NULL)
+  ProcessError = TRUE, simulation = NULL, keep_recdevs = FALSE)
 }
 \arguments{
 \item{nrep}{Number of replicates to run.}
