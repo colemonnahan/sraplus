@@ -64,15 +64,16 @@ run.SIR <- function(nrep,
   # dyn.load(dynlib(system.file("tmb", "baranov.cpp", package = "sraplus") %>%
   #                   str_replace(".cpp","")))
 
-  if (is.na(seed) == FALSE){
+  if (is.na(seed) == FALSE) {
     set.seed(seed)
   }
 
   check_penalties(penalties)
   pen <- penalties
   NY <- length(Catch)
-  if (is.null(years))
+  if (is.null(years)) {
     years <- 1:NY
+  }
   stopifnot(length(Catch) == length(years))
   catch_store <- array(dim = c(NY, nrep))
 
@@ -82,7 +83,7 @@ run.SIR <- function(nrep,
   Bscaledstore <- Uscaledstore <- array(dim = c(NY, nrep))
   LikeStore <- rep(0, len = nrep)
   bmsy <- umsy <- cmsy <- crashed <- rep(NA, len = nrep)
-  B <- array(dim = (NY + 1))  #stock biomass
+  B <- array(dim = (NY + 1)) # stock biomass
   ## Recruitment deviations (rows are replicates, columns years)
   recdevs <- matrix(NA, nrow = nrep, ncol = NY)
   ## Draw from biological  priors for SIR
@@ -99,14 +100,16 @@ run.SIR <- function(nrep,
     ## lognormal
     InitialPrior <-
       rlnorm(nrep,
-             meanlog = pen$initial.mean,
-             sdlog = pen$initial.sd)
+        meanlog = pen$initial.mean,
+        sdlog = pen$initial.sd
+      )
   } else {
     ## normal
     InitialPrior <-
       rnorm(nrep,
-            mean = pen$initial.mean,
-            sd = pen$initial.sd)
+        mean = pen$initial.mean,
+        sd = pen$initial.sd
+      )
   }
   ## Carrying capacity (need to rename this at some point)
   if (is.null(pen$carry.dist)) {
@@ -127,35 +130,45 @@ run.SIR <- function(nrep,
   } else if (pen$carry.dist == 2) {
     Cprior <- rlnorm(nrep, pen$carry.mean, pen$carry.sd)
   }
-  if (any(InitialPrior < 0))
-    warning('Some initial depletion values were negative')
-  if (any(Cprior < 0))
-    warning('Some carrying capacity values were negative')
+
+  log_q_prior <- rnorm(nrep, -15, .5)
+
+  if (any(InitialPrior < 0)) {
+    warning("Some initial depletion values were negative")
+  }
+  if (any(Cprior < 0)) {
+    warning("Some carrying capacity values were negative")
+  }
   ## Tack these onto the biological priors
   priors$draws$Cprior <- Cprior
   priors$draws$InitialPrior <- InitialPrior
+  priors$draws$log_q_prior <- log_q_prior
+
   draws <- priors$draws
   ## Start of SIR
   for (irep in 1:nrep) {
-    ##loop over replicates
+    ## loop over replicates
     ## set priors
-    InitialDeplete <- draws[irep, 'InitialPrior']
-    Carry <- draws[irep, 'Cprior']
+    InitialDeplete <- draws[irep, "InitialPrior"]
+    Carry <- draws[irep, "Cprior"]
     ## life history
-    Steep <- draws[irep, 'h']
-    NatMort <- draws[irep, 'M']
+    Steep <- draws[irep, "h"]
+    NatMort <- draws[irep, "M"]
     ## Sometimes these can round down to 0 so arbitrarily setting a min
-    AgeMat <- max(1, round(draws[irep, 'tm']))
-    AgeMax <- max(4, AgeMat, ceiling(draws[irep, 'tmax']))
-    Sigma <- draws[irep, 'Sigma']
+    AgeMat <- max(1, round(draws[irep, "tm"]))
+    AgeMax <- max(4, AgeMat, ceiling(draws[irep, "tmax"]))
+    Sigma <- draws[irep, "Sigma"]
     ## growth
-    lwa <- draws[irep, 'lwa']
-    lwb <- draws[irep, 'lwb']
-    Linf <- draws[irep, 'Loo']
-    vbk <- draws[irep, 'K']
+    lwa <- draws[irep, "lwa"]
+    lwb <- draws[irep, "lwb"]
+    Linf <- draws[irep, "Loo"]
+    vbk <- draws[irep, "K"]
     ages <- 1:AgeMax
     Length <- Linf * (1 - exp(-vbk * ages))
-    Weight <- lwa * Length ^ lwb
+    Weight <- lwa * Length^lwb
+
+    log_q <- draws$log_q_prior[irep]
+
     out <- AgeModel(
       Catch = Catch,
       AgeMat = AgeMat,
@@ -166,11 +179,13 @@ run.SIR <- function(nrep,
       Weight = Weight,
       InitialDeplete = InitialDeplete,
       Sigma = Sigma,
+      log_q = log_q,
       AgeVulnOffset = AgeVulnOffset,
       ProcessError = ProcessError,
       simulation = simulation,
       use_tmb = use_tmb,
-      inst_f = inst_f)
+      inst_f = inst_f
+    )
 
     pop <- out$pop
     ## plot(Years,pop,type="l",ylim=c(0,max(pop)))
@@ -183,6 +198,8 @@ run.SIR <- function(nrep,
     bscaled <- out$Vpop / out$bmsy
 
     pchange_effort <- dplyr::lead(out$f_y) / out$f_y
+
+    index <- out$index
 
 
     ## This is the final year "penalty" on an assumed level of depletion or
@@ -223,11 +240,13 @@ run.SIR <- function(nrep,
           )
       }
 
+
+      ## allow for penalties on percentage changes in effort
       if (!is.null(pen$pchange_effort_dist)) {
         if (pen$pchange_effort_dist == 1) {
-          x <- pchange_effort[1:(NY-1)]
+          x <- pchange_effort[1:(NY - 1)]
         } else {
-          x <-  log(pchange_effort[1:(NY-1)])
+          x <- log(pchange_effort[1:(NY - 1)])
         }
         loglike <- loglike +
           sum(dnorm(
@@ -236,6 +255,23 @@ run.SIR <- function(nrep,
             sd = pen$pchange_effort_sd,
             log = TRUE
           ), na.rm = TRUE) # important to allow for missing years of effort data
+      }
+
+      ## penalties on abundance index
+
+      if (!is.null(pen$index_dist)) {
+        if (pen$index_dist == 1) {
+          x <- index
+        } else {
+          x <- log(index)
+        }
+        loglike <- loglike +
+          sum(dnorm(
+            x,
+            mean = pen$index_mean,
+            sd = pen$index_sd,
+            log = TRUE
+          ), na.rm = TRUE)
       }
 
       LikeStore[irep] <- exp(loglike)
@@ -251,7 +287,7 @@ run.SIR <- function(nrep,
     bmsy[irep] <- out$bmsy
     crashed[irep] <- out$crashed
     recdevs[irep, ] <- out$devs
-  } #end of loop over replicates
+  } # end of loop over replicates
 
   ## filter keepers
   Nkeep <- floor((pct.keep / 100 * nrep))
@@ -280,7 +316,6 @@ run.SIR <- function(nrep,
 
   foo <- function(break_point, cumu_like) {
     out <- which(cumu_like > break_point)[1] - 1
-
   }
 
   K <- purrr::map_dbl(BreakPoints, foo, cumu_like = CumLike)
@@ -304,7 +339,7 @@ run.SIR <- function(nrep,
       bmsy = bmsy[K],
       uscaled = Uscaledstore[, K],
       bscaled = Bscaledstore[, K],
-      recdevs = ifelse(keep_recdevs,recdevs,NA),
+      recdevs = ifelse(keep_recdevs, recdevs, NA),
       penalties = pen,
       Keepers = K,
       crashed = crashed,

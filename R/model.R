@@ -27,6 +27,7 @@ AgeModel <- function(Catch,
                      Weight,
                      InitialDeplete,
                      Sigma,
+                     log_q = -10,
                      AgeVulnOffset = -1,
                      ProcessError = TRUE,
                      simulation = NULL,
@@ -310,6 +311,7 @@ AgeModel <- function(Catch,
   }
   out <-
     list(
+      index = pop * exp(log_q),
       pop = pop,
       Vpop = Vpop,
       hr = hrstore,
