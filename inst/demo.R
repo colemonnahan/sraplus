@@ -26,10 +26,24 @@
   ## terminal B/BMSY; ustatus=terminal U/UMSY; initial=initial depletion
   pen <- list(bstatus.mean=0, bstatus.sd=0.5, bstatus.dist=2,
               ustatus.mean=0.5, ustatus.sd=0.25, ustatus.dist=2,
-              initial.mean=0, initial.sd=.3, initial.dist=2)
+              initial.mean=0, initial.sd=.3, initial.dist=2,
+              index_mean = log(Catch / 1e6),
+              index_sd = 0.2,
+              index_dist = 2)
   ## Run SIR to get posterior samples
   fit <- run.SIR(nrep=nrep, Catch=Catch, Taxon=Taxon, penalties=pen,
                   years=2005:2015, inst_f = FALSE)
+
+  # fit$draws$log_q_prior[fit$Keepers]
+  #
+  # fit$draws %>%
+  #   mutate(keepers = (1:nrow(.)) %in% fit$Keepers)
+  #
+  # ggplot() +
+  #   geom_density(data = data_frame(x = fit$draws$log_q_prior[fit$Keepers]),
+  #                  aes(x), fill = "red") +
+  #   geom_density(data = data_frame(x = fit$draws$log_q_prior),
+  #                  aes(x), fill = "blue")
 
 ## Quick time series plots
 par(mfrow=c(3,1))
