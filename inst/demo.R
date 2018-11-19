@@ -1,35 +1,35 @@
-### This file provides a quick demonstration of the package using a
-### hard-coded example. In development and subject to change!
+  ### This file provides a quick demonstration of the package using a
+  ### hard-coded example. In development and subject to change!
 
-## devtools::document('..')
-## devtools::install('C:/Users/Cole/sraplus', quick=TRUE)
-## devtools::load_all('C:/Users/Cole/sraplus')
-# devtools::install_github(repo='colemonnahan/sraplus', quick=TRUE)
-library(FishLife)
-library(mvtnorm)
-library(dplyr)
-library(sraplus)
-library(ggplot2)
-## You need to put the file "Return.RData" in the "data" folder of the
-## package. It's too large to include it and should be removed later. Comes
-## from FishLife
-data(Return)
+  ## devtools::document('..')
+  ## devtools::install('C:/Users/Cole/sraplus', quick=TRUE)
+  ## devtools::load_all('C:/Users/Cole/sraplus')
+  # devtools::install_github(repo='colemonnahan/sraplus', quick=TRUE)
+  library(FishLife)
+  library(mvtnorm)
+  library(dplyr)
+  library(sraplus)
+  library(ggplot2)
+  ## You need to put the file "Return.RData" in the "data" folder of the
+  ## package. It's too large to include it and should be removed later. Comes
+  ## from FishLife
+  data(Return)
 
-## A simulated stock history for demonstration purposes
-nrep <- 20000 # total reps, 10% will be kept
-set.seed(2323)
-Catch <- runif(11, 50000, 300000)
-Taxon <- c(Class="Actinopterygii", Order="Perciformes",
-           Family="Scombridae", Genus="Thunnus", Species="albacares")
-## Define the penalties. Defaults to a uniform carrying capacity
-## distribution that is based on max catch (needs to be updated). bstatus =
-## terminal B/BMSY; ustatus=terminal U/UMSY; initial=initial depletion
-pen <- list(bstatus.mean=0, bstatus.sd=0.5, bstatus.dist=2,
-            ustatus.mean=0.5, ustatus.sd=0.25, ustatus.dist=2,
-            initial.mean=0, initial.sd=.3, initial.dist=2)
-## Run SIR to get posterior samples
-fit <- run.SIR(nrep=nrep, Catch=Catch, Taxon=Taxon, penalties=pen,
-                years=2005:2015)
+  ## A simulated stock history for demonstration purposes
+  nrep <- 20000 # total reps, 10% will be kept
+  set.seed(2323)
+  Catch <- runif(11, 50000, 300000)
+  Taxon <- c(Class="Actinopterygii", Order="Perciformes",
+             Family="Scombridae", Genus="Thunnus", Species="albacares")
+  ## Define the penalties. Defaults to a uniform carrying capacity
+  ## distribution that is based on max catch (needs to be updated). bstatus =
+  ## terminal B/BMSY; ustatus=terminal U/UMSY; initial=initial depletion
+  pen <- list(bstatus.mean=0, bstatus.sd=0.5, bstatus.dist=2,
+              ustatus.mean=0.5, ustatus.sd=0.25, ustatus.dist=2,
+              initial.mean=0, initial.sd=.3, initial.dist=2)
+  ## Run SIR to get posterior samples
+  fit <- run.SIR(nrep=nrep, Catch=Catch, Taxon=Taxon, penalties=pen,
+                  years=2005:2015, inst_f = FALSE)
 
 ## Quick time series plots
 par(mfrow=c(3,1))
@@ -41,7 +41,7 @@ plot_ustatus(fit)
 ## function need updating. Red points are crashed, black points not kept,
 ## and green kept.
 plot_draws(fit)
-
+plot_fit(fit)
 ## Run an arbitrary second fit and compare the differences.
 
 

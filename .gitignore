@@ -3,3 +3,7 @@
 .RData
 data/Return.rda
 data/
+.httr-oauth
+*.o
+*.so
+

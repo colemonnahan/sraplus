@@ -6,7 +6,8 @@
 \usage{
 run.SIR(nrep, Catch, Taxon, penalties = NULL, Kprior = 3, Kscale = 2,
   AgeVulnOffset = -1, years = NULL, pct.keep = 10,
-  ProcessError = TRUE, simulation = NULL, keep_recdevs = FALSE)
+  ProcessError = TRUE, simulation = NULL, keep_recdevs = FALSE,
+  use_tmb = FALSE, inst_f = TRUE, seed = 42)
 }
 \arguments{
 \item{nrep}{Number of replicates to run.}
@@ -31,8 +32,7 @@ before it. Thus (age of vulnerability = age of maturity +
 AgeVulnOffset). Defaults -1. Note that AgeMat is stochastic inside the
 function, so age at vulnerability will vary with it.}
 
-\item{years}{Optional vector of years which is used by plotting
-functions. Defaults to 1:length(Catch).}
+\item{years}{Optional vector of years which is used by plotting}
 
 \item{pct.keep}{The percentage of "keepers" from the total. Default
 10\%.}
@@ -41,6 +41,15 @@ functions. Defaults to 1:length(Catch).}
 deviations, passed on to model. Defaults to TRUE.}
 
 \item{simulation}{See documentation for AgeModel.}
+
+\item{keep_recdevs}{logical to store rec devs, since they take a lot of memory}
+
+\item{use_tmb}{use TMB to fit catches (bad idea)}
+
+\item{inst_f}{logical indicating whether to use instantaneous F or not}
+
+\item{seed}{seed for run
+functions. Defaults to 1:length(Catch).}
 }
 \value{
 A list containing depletion, SSB, and harvest rate (U) for

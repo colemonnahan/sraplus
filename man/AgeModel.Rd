@@ -6,7 +6,8 @@
 \usage{
 AgeModel(Catch, AgeMat, Steep, NatMort, AgeMax, Carry, Weight,
   InitialDeplete, Sigma, AgeVulnOffset = -1, ProcessError = TRUE,
-  simulation = NULL, carry_form = "ssb")
+  simulation = NULL, carry_form = "ssb", use_tmb = FALSE,
+  inst_f = FALSE)
 }
 \arguments{
 \item{Catch}{To do}

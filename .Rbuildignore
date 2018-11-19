@@ -2,3 +2,4 @@
 ^\.Rproj\.user$
 ^data$
 man-roxygen
+^\.httr-oauth$

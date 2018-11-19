@@ -30,7 +30,9 @@ AgeModel <- function(Catch,
                      AgeVulnOffset = -1,
                      ProcessError = TRUE,
                      simulation = NULL,
-                     carry_form = "ssb") {
+                     carry_form = "ssb",
+                     use_tmb = FALSE,
+                     inst_f = FALSE) {
 
   stopifnot(AgeMat > 0)
   AgeVuln <- AgeMat + AgeVulnOffset
@@ -69,7 +71,7 @@ AgeModel <- function(Catch,
 
   rzero_fit <-
     nlminb(
-      log(Carry),
+      log(Carry / max(Weight)),
       tune_r0,
       carry = Carry,
       m = NatMort,
@@ -100,7 +102,7 @@ AgeModel <- function(Catch,
   ## set initial numbers at age
 
   r_depletion_fit <- nlminb(
-    log(Carry),
+    log(rzero * InitialDeplete),
     tune_r0,
     carry = Carry * InitialDeplete,
     m = NatMort,
@@ -119,7 +121,7 @@ AgeModel <- function(Catch,
   ##  now loop over time
   ## bio is spawning biomass; pop is vulnerable biomass; rec is recruits;
   ## hrstore is the harvest rate
-  Vpop <- hrstore <- f_y <- bio <- pop <- rec <- eggs <-
+  Vpop <- hrstore <- f_y <- bio <- pop <- rec <- eggs <- catch_hat <-
     rep(NA, length = NYears)
   crashed <- FALSE
   for (y in 1:NYears) {
@@ -131,46 +133,59 @@ AgeModel <- function(Catch,
     }
     ## harvest rate based on catch
 
-    if (Catch[y] >=  Vpop[y]) {
+    if (Catch[y] >=  (Vpop[y] * exp(-NatMort))) {
       break
     }
 
-    f_guess <- -log(1 - Catch[y] / Vpop[y])
+    if (inst_f == TRUE){
+    f_guess <- -log(1 - Catch[y] / (Vpop[y] * exp(-NatMort)))
 
-    browser()
+    # dyn.load(dynlib(system.file("tmb", "baranov", package = "sraplus")))
 
 
+    if (use_tmb == TRUE){
     baranov_model <-
       TMB::MakeADFun(
         list( m = NatMort,
               sel = vuln,
               b_a = num * Weight,
-              catch = Catch[y]),
+              catches = Catch[y]),
         list(log_f = log(f_guess)),
-        DLL = "baranov")
+        DLL = "baranov",
+        silent = TRUE)
 
     fitted_f <- nlminb(baranov_model$par,
                        baranov_model$fn,
                        baranov_model$gr)
 
+    } else {
 
     fitted_f <-
       nlminb(
         log(f_guess),
-        baranov_catches,
+        baranov,
         m = NatMort,
         sel = vuln,
         b_a = num * Weight,
         catch = Catch[y]
       )
+    }
 
     # baranov_catches(fitted_f$par, m = NatMort, sel = vuln, b_a = num * Weight,use = 2, catch = 2)
 
-    if (fitted_f$objective >1) {
+    if (fitted_f$objective > 0.1) {
       break
     }
 
     f <- exp(fitted_f$par)
+
+
+    } else{
+
+      f <- -log(1 - Catch[y] / (Vpop[y]))
+
+    } # if not, use approximation of F
+
 
     f_y[y] <- f
 
@@ -191,6 +206,8 @@ AgeModel <- function(Catch,
     ## recruits with process error
     rec[y]  <-  eggs[y] / (alpha + betav * eggs[y])  * exp(devs[y])
     last_max <- num[maxage]
+
+    catch_hat[y] <- sum((f * vuln) / (f * vuln + NatMort) * (num * Weight) * (1 - exp(-(f * vuln + NatMort))))
 
     num[2:(maxage)] <- num[1:(maxage - 1)] * exp(-(f * vuln[1:(maxage - 1)] + NatMort))
 
@@ -296,6 +313,7 @@ AgeModel <- function(Catch,
       pop = pop,
       Vpop = Vpop,
       hr = hrstore,
+      catch_hat = catch_hat,
       f_y = f_y,
       umsy = 1 - exp(-exp(fit$par)),
       fmsy = exp(fit$par),

@@ -21,6 +21,10 @@
 #'   AgeVulnOffset). Defaults -1. Note that AgeMat is stochastic inside the
 #'   function, so age at vulnerability will vary with it.
 #' @param years Optional vector of years which is used by plotting
+#' @param keep_recdevs logical to store rec devs, since they take a lot of memory
+#' @param use_tmb use TMB to fit catches (bad idea)
+#' @param inst_f logical indicating whether to use instantaneous F or not
+#' @param seed seed for run
 #'   functions. Defaults to 1:length(Catch).
 #' @details The penalties list provides penalties and priors for up to four
 #'   components of the analysis: initial depletion, carrying capacity (K),
@@ -49,13 +53,29 @@ run.SIR <- function(nrep,
                     pct.keep = 10,
                     ProcessError = TRUE,
                     simulation = NULL,
-                    keep_recdevs = FALSE) {
+                    keep_recdevs = FALSE,
+                    use_tmb = FALSE,
+                    inst_f = TRUE,
+                    seed = 42) {
+
+
+  # TMB::compile(system.file("tmb", "baranov.cpp", package = "sraplus"), "-O0")
+  #
+  # dyn.load(dynlib(system.file("tmb", "baranov.cpp", package = "sraplus") %>%
+  #                   str_replace(".cpp","")))
+
+  if (is.na(seed) == FALSE){
+    set.seed(seed)
+  }
+
   check_penalties(penalties)
   pen <- penalties
   NY <- length(Catch)
   if (is.null(years))
     years <- 1:NY
   stopifnot(length(Catch) == length(years))
+  catch_store <- array(dim = c(NY, nrep))
+
   Bstore <- array(dim = c(NY, nrep))
   Dstore <- array(dim = c(NY, nrep))
   Ustore <- array(dim = c(NY, nrep))
@@ -148,7 +168,9 @@ run.SIR <- function(nrep,
       Sigma = Sigma,
       AgeVulnOffset = AgeVulnOffset,
       ProcessError = ProcessError,
-      simulation = simulation)
+      simulation = simulation,
+      use_tmb = use_tmb,
+      inst_f = inst_f)
 
     pop <- out$pop
     ## plot(Years,pop,type="l",ylim=c(0,max(pop)))
@@ -161,6 +183,7 @@ run.SIR <- function(nrep,
     bscaled <- out$Vpop / out$bmsy
 
     pchange_effort <- dplyr::lead(out$f_y) / out$f_y
+
 
     ## This is the final year "penalty" on an assumed level of depletion or
     ## harvest rate (or both). If the biomass crashes it will return a
@@ -204,7 +227,6 @@ run.SIR <- function(nrep,
         if (pen$pchange_effort_dist == 1) {
           x <- pchange_effort[1:(NY-1)]
         } else {
-
           x <-  log(pchange_effort[1:(NY-1)])
         }
         loglike <- loglike +
@@ -218,6 +240,7 @@ run.SIR <- function(nrep,
 
       LikeStore[irep] <- exp(loglike)
     } # otherwise it is 0 by default
+    catch_store[, irep] <- out$catch_hat
     Bstore[, irep] <- pop
     Dstore[, irep] <- Deplete
     Ustore[, irep] <- out$hr
@@ -274,6 +297,7 @@ run.SIR <- function(nrep,
       years = years,
       ssb = Bstore[, K],
       U = Ustore[, K],
+      catch_store = catch_store[, K],
       depletion = Dstore[, K],
       umsy = umsy[K],
       cmsy = cmsy[K],
